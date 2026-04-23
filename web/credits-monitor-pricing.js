@@ -7,8 +7,31 @@ const XAI_CREDITS = {
   videoEditPerSecond: 40.3,
   scaledRawDivisor: 100_000_000
 };
+const FIXED_RUN_CREDITS = {
+  "byteplus:seedream-4-5-251128": 8.44,
+  "byteplus:seedream-5-0-260128": 7.39,
+  "stability:v2beta/stable-image/generate/core": 6.33,
+  "stability:v2beta/stable-image/generate/ultra": 16.88,
+  "stability:v2beta/stable-image/upscale/conservative": 84.4,
+  "stability:v2beta/stable-image/upscale/creative": 126.6,
+  "stability:v2beta/stable-image/upscale/fast": 4.22,
+  "wavespeed:seedvr2": 2.11,
+  "wavespeed:ultimate-image-upscaler": 12.66,
+  "wavespeed:flashvsr:720p": 12.66,
+  "wavespeed:flashvsr:1080p": 18.99,
+  "wavespeed:flashvsr:2k": 25.32,
+  "wavespeed:flashvsr:4k": 33.76,
+  "wavespeed:nano-banana-pro/edit:1k": 28.27,
+  "wavespeed:nano-banana-pro/edit:2k": 28.27,
+  "wavespeed:nano-banana-pro/edit:4k": 50.64,
+  "kling:pro:kling-v2-5-turbo": 73.85,
+  "kling:std:kling-v2-5-turbo": 73.85
+};
 
 const MODEL_TOKEN_RATES = {
+  "openai:gpt-5": { input_text_tokens: 263.75, cached_input_text_tokens: 26.38, output_text_tokens: 2110 },
+  "openai:gpt-5-mini": { input_text_tokens: 52.75, cached_input_text_tokens: 5.28, output_text_tokens: 422 },
+  "openai:gpt-5-nano": { input_text_tokens: 10.55, cached_input_text_tokens: 1.06, output_text_tokens: 84.4 },
   "openai:gpt-image-1": { input_text_tokens: 2110, input_image_tokens: 2110, output_image_tokens: 8440 },
   "openai:gpt-image-1.5": { input_text_tokens: 1688, input_image_tokens: 1688, output_image_tokens: 6752 },
   "openai:gpt-image-2": {
@@ -39,6 +62,14 @@ const MODEL_TOKEN_RATES = {
     input_text_tokens: 105.5, input_image_tokens: 105.5, input_video_tokens: 105.5,
     input_audio_tokens: 211, output_text_tokens: 633, thoughts_tokens: 633, output_image_tokens: 12660
   },
+  "vertexai:gemini-3.1-pro-preview": {
+    input_text_tokens: 422, input_image_tokens: 422, input_video_tokens: 422,
+    input_audio_tokens: 422, output_text_tokens: 2532, thoughts_tokens: 2532, output_image_tokens: 25320
+  },
+  "vertexai:gemini-3.1-flash-lite-preview": {
+    input_text_tokens: 52.75, input_image_tokens: 52.75, input_video_tokens: 52.75,
+    input_audio_tokens: 105.5, output_text_tokens: 316.5, thoughts_tokens: 316.5
+  },
   "vertexai:gemini-3-pro-image-preview": {
     input_text_tokens: 422, input_image_tokens: 422, input_video_tokens: 422,
     input_audio_tokens: 422, output_text_tokens: 2532, thoughts_tokens: 2532, output_image_tokens: 25320
@@ -51,7 +82,7 @@ function num(value, fallback = 0) {
 }
 
 export function estimateCredits(event) {
-  return estimateXaiCredits(event) ?? estimateTokenCredits(event);
+  return estimateXaiCredits(event) ?? estimateFixedCredits(event) ?? estimateKlingCredits(event) ?? estimateTokenCredits(event);
 }
 
 function rateTableForEvent(event) {
@@ -69,7 +100,11 @@ function estimateTokenCredits(event) {
   const rates = rateTableForEvent(event);
   if (!rates) return null;
   const params = event?.params || {};
-  const aliases = { input_tokens: "input_text_tokens", output_tokens: "output_text_tokens" };
+  const aliases = {
+    input_tokens: "input_text_tokens",
+    output_tokens: "output_text_tokens",
+    cached_tokens: "cached_input_text_tokens"
+  };
   let credits = 0;
   let matched = false;
   Object.entries(params).forEach(([rawKey, value]) => {
@@ -80,6 +115,68 @@ function estimateTokenCredits(event) {
     credits += (num(value) / 1_000_000) * rate;
   });
   return matched ? credits : null;
+}
+
+function estimateFixedCredits(event) {
+  const params = event?.params || {};
+  const provider = String(params.api_name ?? params.provider ?? params.service ?? "").toLowerCase();
+  const model = String(params.model ?? params.model_name ?? params.engine ?? "").toLowerCase();
+  const endpoint = String(params.endpoint ?? "").toLowerCase();
+  const generatedImages = Math.max(1, num(params.generated_images, 1));
+  const resolution = String(params.resolution ?? "").toLowerCase();
+
+  if (provider === "byteplus" && FIXED_RUN_CREDITS[`${provider}:${model}`]) {
+    return FIXED_RUN_CREDITS[`${provider}:${model}`] * generatedImages;
+  }
+  if (provider === "stability" && FIXED_RUN_CREDITS[`${provider}:${endpoint}`]) {
+    return FIXED_RUN_CREDITS[`${provider}:${endpoint}`];
+  }
+  if (provider === "wavespeed") {
+    if (endpoint === "flashvsr" && FIXED_RUN_CREDITS[`${provider}:${endpoint}:${resolution}`]) {
+      return FIXED_RUN_CREDITS[`${provider}:${endpoint}:${resolution}`];
+    }
+    if (endpoint === "nano-banana-pro/edit") {
+      return FIXED_RUN_CREDITS[`${provider}:${endpoint}:${resolution || "1k"}`] || null;
+    }
+    return FIXED_RUN_CREDITS[`${provider}:${endpoint}`] || null;
+  }
+  return null;
+}
+
+function estimateKlingCredits(event) {
+  const params = event?.params || {};
+  const provider = String(params.api_name ?? params.provider ?? params.service ?? "").toLowerCase();
+  if (provider !== "kling") return null;
+  const model = String(params.model ?? params.model_name ?? "").toLowerCase();
+  const endpoint = String(params.endpoint ?? "").toLowerCase();
+  const mode = String(params.mode ?? "pro").toLowerCase();
+  const duration = num(params.duration, 0);
+  const finalUnitDeduction = num(params.final_unit_deduction, 0);
+
+  if (FIXED_RUN_CREDITS[`kling:${mode}:${model}`]) return FIXED_RUN_CREDITS[`kling:${mode}:${model}`];
+
+  if (model === "kling-video-o1") {
+    const seconds = duration || inferKlingDuration(finalUnitDeduction);
+    if (!seconds) return null;
+    const ratePerSecond = Boolean(params.generate_with_video)
+      ? (mode === "pro" ? 35.45 : 26.59)
+      : (mode === "pro" ? 23.63 : 17.72);
+    return seconds * ratePerSecond;
+  }
+
+  if (model.startsWith("kling-v3")) {
+    const seconds = duration || inferKlingDuration(finalUnitDeduction);
+    if (!seconds) return null;
+    return seconds * (mode === "pro" ? 23.63 : 17.72);
+  }
+
+  if (endpoint === "videos/image2video" || endpoint === "videos/text2video") {
+    const seconds = duration || inferLegacyKlingDuration(model);
+    if (!seconds) return null;
+    return seconds * (mode === "pro" ? 23.63 : 17.72);
+  }
+
+  return null;
 }
 
 function estimateXaiCredits(event) {
@@ -105,4 +202,15 @@ function estimateXaiCredits(event) {
 
   const rawCredits = num(params.credits, 0);
   return rawCredits > 0 ? rawCredits / XAI_CREDITS.scaledRawDivisor : null;
+}
+
+function inferKlingDuration(finalUnitDeduction) {
+  if (!finalUnitDeduction) return 0;
+  return finalUnitDeduction / 1.2;
+}
+
+function inferLegacyKlingDuration(model) {
+  if (model.includes("10")) return 10;
+  if (model.includes("5")) return 5;
+  return 0;
 }
