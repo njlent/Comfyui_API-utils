@@ -5,6 +5,7 @@ Frontend-only ComfyUI custom node pack.
 Features:
 - top-bar credits widget
 - USD conversion
+- API node USD pricing badge
 - manual refresh
 - bottom-panel analytics for Comfy credits usage
 - model/provider breakdown
@@ -22,5 +23,6 @@ Install:
 Notes:
 - reads Comfy billing/account endpoints already used by the official UI
 - uses the same current UI conversion ratio: `211 credits = $1`
+- API nodes now show both credits and USD estimate badges
 - supports both legacy personal-credit routes (`/api/customers/*`) and workspace billing routes (`/api/billing/*`)
 - no extra Python deps
