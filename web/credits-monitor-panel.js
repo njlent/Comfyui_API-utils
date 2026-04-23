@@ -178,12 +178,20 @@ function overviewMarkup(context) {
     groupBy: stackedGroup,
     topN: 5
   });
-  const providerShare = context.providerSummary.map((item) => ({
-    key: item.provider,
-    label: item.provider,
-    value: item.credits,
-    total: item.credits
-  }));
+  const shareItems =
+    stackedGroup === "model"
+      ? context.modelLeaderboard.slice(0, 6).map((item) => ({
+          key: `${item.provider}|||${item.model}`,
+          label: item.model,
+          value: item.credits,
+          total: item.credits
+        }))
+      : context.providerSummary.map((item) => ({
+          key: item.provider,
+          label: item.provider,
+          value: item.credits,
+          total: item.credits
+        }));
   return `
     <section class="cae-section-grid">
       <div class="cae-shell-card cae-card-span-2">
@@ -208,17 +216,17 @@ function overviewMarkup(context) {
       <div class="cae-shell-card">
         <div class="cae-card-head">
           <div>
-            <h3>Provider share</h3>
-            <p>Pie-style share of credits by provider.</p>
+            <h3>${stackedGroup === "model" ? "Model share" : "Provider share"}</h3>
+            <p>Pie-style share of credits by ${stackedGroup === "model" ? "model" : "provider"}.</p>
           </div>
         </div>
         ${renderDonutChart({
-          items: providerShare,
+          items: shareItems,
           valueFormatter: (value) => fmtCredits(value),
           centerValue: fmtCredits(context.usageSummary.totalCredits),
           centerSubvalue: fmtUsd(context.usageSummary.totalUsd),
           compactCenter: true,
-          emptyMessage: "No provider share yet."
+          emptyMessage: `No ${stackedGroup} share yet.`
         })}
       </div>
       <div class="cae-shell-card cae-card-span-2">
