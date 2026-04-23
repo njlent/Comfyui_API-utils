@@ -2,17 +2,17 @@ import { app } from "../../scripts/app.js";
 import { api } from "../../scripts/api.js";
 import { estimateCredits } from "./credits-monitor-pricing.js";
 
-export const EXTENSION_NAME = "Comfy.ApiEnhance.CreditsMonitor";
+export const EXTENSION_NAME = "Comfy.ApiUtils.CreditsMonitor";
 export const PANEL_TAB_ID = "credits-analytics";
 export const CMD_OPEN = "creditsAnalytics.open";
 export const CMD_REFRESH = "creditsAnalytics.refresh";
 
-const WINDOW_KEY = "comfy.api_enhance.window";
-const SECTION_KEY = "comfy.api_enhance.section";
-const PROVIDER_KEY = "comfy.api_enhance.provider";
-const MODEL_KEY = "comfy.api_enhance.model";
-const STACKED_GROUP_KEY = "comfy.api_enhance.stacked_group";
-const PAGE_KEY = "comfy.api_enhance.page";
+const WINDOW_KEY = "comfy.api_utils.window";
+const SECTION_KEY = "comfy.api_utils.section";
+const PROVIDER_KEY = "comfy.api_utils.provider";
+const MODEL_KEY = "comfy.api_utils.model";
+const STACKED_GROUP_KEY = "comfy.api_utils.stacked_group";
+const PAGE_KEY = "comfy.api_utils.page";
 const CREDITS_PER_USD = 211;
 const CLOUD_API_ORIGIN = "https://api.comfy.org";
 

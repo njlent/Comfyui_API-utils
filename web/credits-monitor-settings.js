@@ -1,8 +1,8 @@
 import { app } from "../../scripts/app.js";
 
 export const SETTING_IDS = {
-  showApiNodeUsdBadge: "Comfy.ApiEnhance.ShowApiNodeUsdBadge",
-  showCreditsWidgetRefreshButton: "Comfy.ApiEnhance.ShowCreditsWidgetRefreshButton"
+  showApiNodeUsdBadge: "Comfy.ApiUtils.ShowApiNodeUsdBadge",
+  showCreditsWidgetRefreshButton: "Comfy.ApiUtils.ShowCreditsWidgetRefreshButton"
 };
 
 const defaults = {
@@ -40,13 +40,13 @@ export function registerSettings() {
     SETTING_IDS.showApiNodeUsdBadge,
     "Toggle estimated $ price for API nodes",
     "showApiNodeUsdBadge",
-    ["ComfyUI API Enhance", "API Nodes", "show-estimated-usd-price"]
+    ["ComfyUI_API-utils", "API Nodes", "show-estimated-usd-price"]
   );
   registerBooleanSetting(
     SETTING_IDS.showCreditsWidgetRefreshButton,
     "Show refresh button in credits widget",
     "showCreditsWidgetRefreshButton",
-    ["ComfyUI API Enhance", "Credits Widget", "show-refresh-button"]
+    ["ComfyUI_API-utils", "Credits Widget", "show-refresh-button"]
   );
 }
 

@@ -1,4 +1,4 @@
-# ComfyUI API Enhance
+# ComfyUI_API-utils
 
 Frontend-only ComfyUI custom node pack.
 

@@ -130,7 +130,7 @@ function attachUsdBadge(node, nodeData) {
 }
 
 app.registerExtension({
-  name: "Comfy.ApiEnhance.ApiNodeUsdBadge",
+  name: "Comfy.ApiUtils.ApiNodeUsdBadge",
   async beforeRegisterNodeDef(nodeType, nodeData) {
     if (!nodeData?.api_node || !nodeData?.price_badge) return;
 
