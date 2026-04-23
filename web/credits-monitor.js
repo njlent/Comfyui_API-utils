@@ -48,6 +48,7 @@ function ensureStyles() {
 function topbarMarkup() {
   const balance = state.balance;
   const authed = hasCloudAuth();
+  const status = topbarStatus();
   const primary = authed
     ? balance
       ? `${fmtCredits(balance.credits)} credits`
@@ -59,10 +60,9 @@ function topbarMarkup() {
       : "No balance loaded"
     : "Settings > User";
   return `
-    <div class="cae-topbar-card" title="${esc(topbarStatus())}">
+    <div class="cae-topbar-card">
       <div class="cae-topbar-balance">
-        <div class="cae-topbar-kicker">Comfy Credits</div>
-        <div class="cae-topbar-primary">${esc(primary)}</div>
+        <div class="cae-topbar-primary" title="${esc(status)}">${esc(primary)}</div>
         <div class="cae-topbar-secondary">${esc(secondary)}</div>
       </div>
       <div class="cae-topbar-actions">
@@ -70,7 +70,6 @@ function topbarMarkup() {
         <button class="cae-button cae-button-pill" data-cae-action="${authed ? "open" : "signin"}">${authed ? "Analytics" : "Sign In"}</button>
       </div>
     </div>
-    <div class="cae-topbar-status">${esc(topbarStatus())}</div>
   `;
 }
 
