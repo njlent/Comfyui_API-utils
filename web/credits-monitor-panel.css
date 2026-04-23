@@ -36,6 +36,19 @@
   text-overflow: ellipsis;
 }
 
+.cae-chart-toggle-group {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.cae-chart-toggle {
+  height: 30px;
+  padding: 0 11px;
+  font-size: 11px;
+}
+
 .cae-metric-strip {
   flex-wrap: wrap;
 }

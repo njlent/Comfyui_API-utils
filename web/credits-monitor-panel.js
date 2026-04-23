@@ -20,6 +20,7 @@ import {
   updateModelFilter,
   updateProviderFilter,
   updateSection,
+  updateStackedGroup,
   updateWindow,
   usageEventsInWindow,
   windowLabel
@@ -171,9 +172,10 @@ function filtersMarkup(context) {
 }
 
 function overviewMarkup(context) {
+  const stackedGroup = state.selectedStackedGroup === "model" ? "model" : "provider";
   const stacked = buildStackedTimeline(context.providerEvents, {
     windowKey: state.selectedWindow,
-    groupBy: "provider",
+    groupBy: stackedGroup,
     topN: 5
   });
   const providerShare = context.providerSummary.map((item) => ({
@@ -187,8 +189,12 @@ function overviewMarkup(context) {
       <div class="cae-shell-card cae-card-span-2">
         <div class="cae-card-head">
           <div>
-            <h3>Stacked provider usage</h3>
-            <p>Credits consumed per time bucket, stacked by provider.</p>
+            <h3>Stacked usage</h3>
+            <p>Credits consumed per time bucket, stacked by ${stackedGroup === "model" ? "model" : "provider"}.</p>
+          </div>
+          <div class="cae-chart-toggle-group">
+            <button class="cae-filter-pill cae-chart-toggle ${stackedGroup === "provider" ? "is-active" : ""}" data-cae-stack-group="provider">Providers</button>
+            <button class="cae-filter-pill cae-chart-toggle ${stackedGroup === "model" ? "is-active" : ""}" data-cae-stack-group="model">Models</button>
           </div>
         </div>
         ${renderStackedBarChart({
@@ -435,6 +441,11 @@ export function attachPanelEvents(container, onRefresh) {
     const sectionButton = event.target.closest("[data-cae-section]");
     if (sectionButton) {
       updateSection(sectionButton.dataset.caeSection);
+      return;
+    }
+    const stackedButton = event.target.closest("[data-cae-stack-group]");
+    if (stackedButton) {
+      updateStackedGroup(stackedButton.dataset.caeStackGroup);
       return;
     }
     const pageButton = event.target.closest("[data-cae-page]");

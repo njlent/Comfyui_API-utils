@@ -11,6 +11,7 @@ const WINDOW_KEY = "comfy.api_enhance.window";
 const SECTION_KEY = "comfy.api_enhance.section";
 const PROVIDER_KEY = "comfy.api_enhance.provider";
 const MODEL_KEY = "comfy.api_enhance.model";
+const STACKED_GROUP_KEY = "comfy.api_enhance.stacked_group";
 const PAGE_KEY = "comfy.api_enhance.page";
 const CREDITS_PER_USD = 211;
 const CLOUD_API_ORIGIN = "https://api.comfy.org";
@@ -36,6 +37,7 @@ function createState() {
     selectedSection: localStorage.getItem(SECTION_KEY) || "overview",
     selectedProvider: localStorage.getItem(PROVIDER_KEY) || "all",
     selectedModel: localStorage.getItem(MODEL_KEY) || "all",
+    selectedStackedGroup: localStorage.getItem(STACKED_GROUP_KEY) || "provider",
     ledgerPage: Number(localStorage.getItem(PAGE_KEY) || 1),
     listeners: new Set(),
     refreshPromise: null,
@@ -332,6 +334,12 @@ export function updateModelFilter(model) {
   state.ledgerPage = 1;
   setStoredValue(MODEL_KEY, state.selectedModel);
   setStoredValue(PAGE_KEY, state.ledgerPage);
+  notify();
+}
+
+export function updateStackedGroup(group) {
+  state.selectedStackedGroup = group === "model" ? "model" : "provider";
+  setStoredValue(STACKED_GROUP_KEY, state.selectedStackedGroup);
   notify();
 }
 
