@@ -138,7 +138,9 @@
 }
 
 .cae-model-row-metric strong,
-.cae-model-row-metric span {
+.cae-model-row-metric span,
+.cae-activity-credits strong,
+.cae-activity-credits span {
   width: 100%;
   text-align: right;
   white-space: nowrap;
@@ -364,7 +366,7 @@
 }
 
 .cae-activity-row {
-  grid-template-columns: 160px minmax(0, 1.3fr) 120px 110px minmax(140px, 0.8fr);
+  grid-template-columns: 160px minmax(0, 1.3fr) 120px 140px;
 }
 
 .cae-activity-row.is-head {
@@ -376,7 +378,7 @@
 }
 
 .cae-activity-time,
-.cae-activity-info {
+.cae-activity-credits span {
   color: var(--cae-muted);
   font-size: 12px;
 }

@@ -95,13 +95,6 @@ function tableBadge(event) {
   return event.type.replaceAll("_", " ");
 }
 
-function eventInfo(event) {
-  if (event.estimated) return "Estimated from token usage";
-  if (event.params?.endpoint) return event.params.endpoint;
-  if (event.params?.video_type) return event.params.video_type;
-  return "Live billing event";
-}
-
 export function usageTableMarkup(context) {
   if (!context.pagedUsage.items.length) return `<div class="cae-empty">No usage activity in this filter scope.</div>`;
   const rows = context.pagedUsage.items
@@ -114,8 +107,10 @@ export function usageTableMarkup(context) {
             <span title="${esc(event.model)}">Model: ${esc(event.model)}</span>
           </div>
           <div class="cae-activity-time" title="${esc(fmtDateFull(event.createdAt))}">${esc(fmtDate(event.createdAt))}</div>
-          <div class="cae-activity-credits">${fmtCredits(event.credits)}</div>
-          <div class="cae-activity-info">${esc(eventInfo(event))}</div>
+          <div class="cae-activity-credits">
+            <strong>${fmtCredits(event.credits)}</strong>
+            <span>${fmtUsd(event.usd)}</span>
+          </div>
         </div>
       `
     )
@@ -133,7 +128,6 @@ export function usageTableMarkup(context) {
         <div>Details</div>
         <div>Time</div>
         <div>Credits</div>
-        <div>Additional Info</div>
       </div>
       ${rows}
       <div class="cae-pagination">
