@@ -28,6 +28,24 @@ function tooltipAttrs(title, body = "") {
   return `data-cae-tooltip-title="${esc(title)}" data-cae-tooltip-body="${esc(body)}"`;
 }
 
+function getStackedAxisScale(maxValue) {
+  const safeMax = Math.max(maxValue, 1);
+  const normalizedMax = safeMax / 1000;
+  const roughStep = normalizedMax / 5;
+  const magnitude = 10 ** Math.floor(Math.log10(Math.max(roughStep, 1)));
+  const residual = roughStep / magnitude;
+  const niceResidual = residual <= 1.5 ? 1 : residual <= 3 ? 2 : residual <= 7 ? 5 : 10;
+  const step = Math.max(niceResidual * magnitude * 1000, 1000);
+  const top = Math.max(Math.ceil(safeMax / step) * step, step);
+  const ticks = Array.from({ length: Math.floor(top / step) + 1 }, (_, index) => index * step);
+  return { step, top, ticks };
+}
+
+function formatStackedAxisValue(value) {
+  if (value <= 0) return "0";
+  return `${Math.round(value / 1000)}k`;
+}
+
 function legendMarkup(items, paletteMap, valueFormatter) {
   if (!items.length) return "";
   return `
@@ -61,19 +79,19 @@ export function renderStackedBarChart({
   const chartWidth = width - padding.left - padding.right;
   const chartHeight = height - padding.top - padding.bottom;
   const maxTotal = Math.max(...bins.map((bin) => bin.total || 0), 1);
+  const axisScale = getStackedAxisScale(maxTotal);
   const gap = 8;
   const step = chartWidth / bins.length;
   const barWidth = Math.max(8, step - gap);
   const paletteMap = getPaletteMap(series);
-  const gridValues = [0, 0.25, 0.5, 0.75, 1];
+  const rangeLabel = bins.length > 1 ? `${bins[0].label} - ${bins[bins.length - 1].label}` : bins[0]?.label || "";
 
-  const grid = gridValues
-    .map((tick) => {
-      const y = padding.top + (1 - tick) * chartHeight;
-      const value = maxTotal * tick;
+  const grid = axisScale.ticks
+    .map((value) => {
+      const y = padding.top + chartHeight - (value / axisScale.top) * chartHeight;
       return `
         <line x1="${padding.left}" y1="${y}" x2="${width - padding.right}" y2="${y}" class="cae-chart-grid-line"></line>
-        <text x="${padding.left - 8}" y="${y + 4}" text-anchor="end" class="cae-chart-axis-text">${esc(valueFormatter(value))}</text>
+        <text x="${padding.left - 8}" y="${y + 4}" text-anchor="end" class="cae-chart-axis-text">${formatStackedAxisValue(value)}</text>
       `;
     })
     .join("");
@@ -85,7 +103,7 @@ export function renderStackedBarChart({
       const rects = bin.segments
         .map((segment) => {
           if (!segment.value) return "";
-          const heightValue = (segment.value / maxTotal) * chartHeight;
+          const heightValue = (segment.value / axisScale.top) * chartHeight;
           const segmentHeight = Math.max(segment.value ? heightValue : 0, 3);
           cursor -= segmentHeight;
           const body = `${bin.label} | ${valueFormatter(segment.value)}`;
@@ -119,10 +137,7 @@ export function renderStackedBarChart({
         })
         .join("");
       return `
-        <g>
-          ${rects}
-          <text x="${x + barWidth / 2}" y="${height - 16}" text-anchor="middle" class="cae-chart-axis-text">${esc(bin.label)}</text>
-        </g>
+        <g>${rects}</g>
       `;
     })
     .join("");
@@ -132,6 +147,7 @@ export function renderStackedBarChart({
       <svg viewBox="0 0 ${width} ${height}" class="cae-chart-svg" role="img" aria-label="Stacked credits chart">
         ${grid}
         ${bars}
+        <text x="${padding.left + chartWidth / 2}" y="${height - 16}" text-anchor="middle" class="cae-chart-axis-text">${esc(rangeLabel)}</text>
       </svg>
       ${legendMarkup(series, paletteMap, valueFormatter)}
     </div>

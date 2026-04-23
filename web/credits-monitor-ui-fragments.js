@@ -68,16 +68,16 @@ export function modelRowsMarkup(items, totalCredits) {
         .map((item) => {
           const share = totalCredits ? (item.credits / totalCredits) * 100 : 0;
           return `
-            <div class="cae-data-row">
+            <div class="cae-data-row cae-model-row">
               <div class="cae-data-row-main">
                 <strong title="${esc(item.model)}">${esc(item.model)}</strong>
                 <span>${esc(item.provider)}</span>
               </div>
-              <div class="cae-data-row-metric">
+              <div class="cae-data-row-metric cae-model-row-metric">
                 <strong>${fmtCredits(item.credits)}</strong>
                 <span>${fmtUsd(item.usd)}</span>
               </div>
-              <div class="cae-data-row-metric">
+              <div class="cae-data-row-metric cae-model-row-metric">
                 <strong>${share.toFixed(1)}%</strong>
                 <span>${fmtCount(item.count)} runs</span>
               </div>
