@@ -158,7 +158,8 @@ export function renderLineChart({
   points,
   valueFormatter,
   emptyMessage = "No line data.",
-  label = "Usage"
+  label = "Usage",
+  compactXAxis = false
 }) {
   if (!points.length || points.every((point) => point.value <= 0)) return emptyState(emptyMessage);
   const width = 720;
@@ -167,11 +168,13 @@ export function renderLineChart({
   const chartWidth = width - padding.left - padding.right;
   const chartHeight = height - padding.top - padding.bottom;
   const maxValue = Math.max(...points.map((point) => point.value), 1);
+  const axisScale = getStackedAxisScale(maxValue);
   const stepX = points.length > 1 ? chartWidth / (points.length - 1) : 0;
+  const rangeLabel = points.length > 1 ? `${points[0].label} - ${points[points.length - 1].label}` : points[0]?.label || "";
 
   const mapped = points.map((point, index) => {
     const x = padding.left + index * stepX;
-    const y = padding.top + chartHeight - (point.value / maxValue) * chartHeight;
+    const y = padding.top + chartHeight - (point.value / axisScale.top) * chartHeight;
     return { ...point, x, y };
   });
 
@@ -186,13 +189,12 @@ export function renderLineChart({
     .map((point, index) => `${index === 0 ? "M" : "L"} ${point.x} ${point.y}`)
     .join(" ");
 
-  const gridValues = [0, 0.25, 0.5, 0.75, 1];
-  const grid = gridValues
-    .map((tick) => {
-      const y = padding.top + (1 - tick) * chartHeight;
+  const grid = axisScale.ticks
+    .map((value) => {
+      const y = padding.top + chartHeight - (value / axisScale.top) * chartHeight;
       return `
         <line x1="${padding.left}" y1="${y}" x2="${width - padding.right}" y2="${y}" class="cae-chart-grid-line"></line>
-        <text x="${padding.left - 8}" y="${y + 4}" text-anchor="end" class="cae-chart-axis-text">${esc(valueFormatter(maxValue * tick))}</text>
+        <text x="${padding.left - 8}" y="${y + 4}" text-anchor="end" class="cae-chart-axis-text">${formatStackedAxisValue(value)}</text>
       `;
     })
     .join("");
@@ -216,9 +218,11 @@ export function renderLineChart({
     )
     .join("");
 
-  const labels = mapped
-    .map(
-      (point, index) => `
+  const labels = compactXAxis
+    ? `<text x="${padding.left + chartWidth / 2}" y="${height - 16}" text-anchor="middle" class="cae-chart-axis-text">${esc(rangeLabel)}</text>`
+    : mapped
+      .map(
+        (point, index) => `
         <text
           x="${point.x}"
           y="${height - 16}"
@@ -226,8 +230,8 @@ export function renderLineChart({
           class="cae-chart-axis-text ${index % Math.ceil(points.length / 8 || 1) !== 0 ? "is-dim" : ""}"
         >${esc(point.label)}</text>
       `
-    )
-    .join("");
+      )
+      .join("");
 
   return `
     <div class="cae-chart-block">

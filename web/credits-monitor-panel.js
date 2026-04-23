@@ -294,7 +294,8 @@ function modelExplorerMarkup(context) {
         ${renderLineChart({
           points: lineData,
           valueFormatter: (value) => fmtCredits(value),
-          label: context.focusModel
+          label: context.focusModel,
+          compactXAxis: state.selectedWindow === "30d" || state.selectedWindow === "custom"
         })}
       </div>
       <div class="cae-shell-card">
