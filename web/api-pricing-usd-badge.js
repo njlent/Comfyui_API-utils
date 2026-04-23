@@ -77,6 +77,15 @@ function cloneBadge(badge) {
   return Object.assign(clone, badge);
 }
 
+function createHiddenBadge(sourceBadge) {
+  const badge = cloneBadge(sourceBadge);
+  badge.text = "";
+  badge.icon = null;
+  badge.bgColor = "transparent";
+  badge.fgColor = "transparent";
+  return badge;
+}
+
 function resolveCreditBadge(node, selfBadgeFn) {
   for (const badgeFn of node.badges || []) {
     if (typeof badgeFn !== "function" || badgeFn === selfBadgeFn || badgeFn[USD_BADGE_MARKER]) continue;
@@ -93,12 +102,12 @@ function resolveCreditBadge(node, selfBadgeFn) {
 
 function createUsdBadge(node, selfBadgeFn) {
   try {
-    if (!showApiNodeUsdBadge()) return null;
     const creditBadge = resolveCreditBadge(node, selfBadgeFn);
     if (!creditBadge?.text) return null;
+    if (!showApiNodeUsdBadge()) return createHiddenBadge(creditBadge);
 
     const usdText = creditsTextToUsd(creditBadge.text);
-    if (!usdText) return null;
+    if (!usdText) return createHiddenBadge(creditBadge);
 
     const badge = cloneBadge(creditBadge);
     badge.text = usdText;
@@ -116,18 +125,39 @@ function redrawCanvas() {
   app.canvas?.setDirty?.(true, true);
 }
 
-subscribeSettings(() => {
-  redrawCanvas();
-});
+function getNodeData(node) {
+  return node?.constructor?.nodeData || node?.comfyClass && window.LiteGraph?.registered_node_types?.[node.comfyClass]?.nodeData || null;
+}
+
+function removeUsdBadge(node) {
+  if (!Array.isArray(node?.badges)) return;
+  node.badges = node.badges.filter((badgeFn) => !badgeFn?.[USD_BADGE_MARKER]);
+}
 
 function attachUsdBadge(node, nodeData) {
-  if (!nodeData?.api_node || !nodeData?.price_badge || !Array.isArray(node.badges)) return;
+  if (!showApiNodeUsdBadge() || !nodeData?.api_node || !nodeData?.price_badge || !Array.isArray(node.badges)) return;
   if (node.badges.some((badgeFn) => badgeFn?.[USD_BADGE_MARKER])) return;
 
   const usdBadgeFn = () => createUsdBadge(node, usdBadgeFn);
   usdBadgeFn[USD_BADGE_MARKER] = true;
   node.badges.push(usdBadgeFn);
 }
+
+function syncUsdBadge(node, nodeData = getNodeData(node)) {
+  removeUsdBadge(node);
+  attachUsdBadge(node, nodeData);
+}
+
+function syncAllUsdBadges() {
+  for (const node of app.graph?._nodes || []) {
+    syncUsdBadge(node);
+  }
+}
+
+subscribeSettings(() => {
+  syncAllUsdBadges();
+  redrawCanvas();
+});
 
 app.registerExtension({
   name: "Comfy.ApiUtils.ApiNodeUsdBadge",
@@ -137,11 +167,11 @@ app.registerExtension({
     const onNodeCreated = nodeType.prototype.onNodeCreated;
     nodeType.prototype.onNodeCreated = function(...args) {
       const result = onNodeCreated?.apply(this, args);
-      window.requestAnimationFrame(() => attachUsdBadge(this, nodeData));
+      window.requestAnimationFrame(() => syncUsdBadge(this, nodeData));
       return result;
     };
   },
   async loadedGraphNode(node, nodeData) {
-    attachUsdBadge(node, nodeData);
+    syncUsdBadge(node, nodeData);
   }
 });

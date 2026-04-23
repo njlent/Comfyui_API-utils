@@ -23,6 +23,7 @@ import {
   esc
 } from "./credits-monitor-ui-fragments.js";
 import {
+  showCreditsWidget,
   showCreditsWidgetRefreshButton,
   subscribeSettings
 } from "./credits-monitor-settings.js";
@@ -93,6 +94,10 @@ function ensureTopbar(attempt = 0) {
   const menu = app.menu?.element;
   if (!menu) {
     scheduleTopbarRetry(attempt);
+    return;
+  }
+  if (!showCreditsWidget()) {
+    state.topbarRoot?.remove();
     return;
   }
   if (!state.topbarRoot) {

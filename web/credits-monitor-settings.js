@@ -1,11 +1,13 @@
 import { app } from "../../scripts/app.js";
 
 export const SETTING_IDS = {
+  showCreditsWidget: "Comfy.ApiUtils.ShowCreditsWidget",
   showApiNodeUsdBadge: "Comfy.ApiUtils.ShowApiNodeUsdBadge",
   showCreditsWidgetRefreshButton: "Comfy.ApiUtils.ShowCreditsWidgetRefreshButton"
 };
 
 const defaults = {
+  showCreditsWidget: true,
   showApiNodeUsdBadge: true,
   showCreditsWidgetRefreshButton: false
 };
@@ -37,6 +39,12 @@ export function registerSettings() {
   if (registered) return;
   registered = true;
   registerBooleanSetting(
+    SETTING_IDS.showCreditsWidget,
+    "Enable credits widget",
+    "showCreditsWidget",
+    ["ComfyUI_API-utils", "Credits Widget", "enabled"]
+  );
+  registerBooleanSetting(
     SETTING_IDS.showApiNodeUsdBadge,
     "Toggle estimated $ price for API nodes",
     "showApiNodeUsdBadge",
@@ -56,12 +64,16 @@ export function subscribeSettings(listener) {
   return () => listeners.delete(listener);
 }
 
+export function showCreditsWidget() {
+  return Boolean(app.ui.settings.getSettingValue(SETTING_IDS.showCreditsWidget));
+}
+
 export function showApiNodeUsdBadge() {
-  return values.showApiNodeUsdBadge;
+  return Boolean(app.ui.settings.getSettingValue(SETTING_IDS.showApiNodeUsdBadge));
 }
 
 export function showCreditsWidgetRefreshButton() {
-  return values.showCreditsWidgetRefreshButton;
+  return Boolean(app.ui.settings.getSettingValue(SETTING_IDS.showCreditsWidgetRefreshButton));
 }
 
 registerSettings();
