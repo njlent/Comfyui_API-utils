@@ -13,6 +13,7 @@ const PROVIDER_KEY = "comfy.api_utils.provider";
 const MODEL_KEY = "comfy.api_utils.model";
 const STACKED_GROUP_KEY = "comfy.api_utils.stacked_group";
 const PAGE_KEY = "comfy.api_utils.page";
+const CUSTOM_WINDOW_DAYS_KEY = "comfy.api_utils.custom_window_days";
 const CREDITS_PER_USD = 211;
 const CLOUD_API_ORIGIN = "https://api.comfy.org";
 
@@ -23,6 +24,12 @@ const WINDOW_LABELS = {
   "30d": "Last month",
   all: "All time"
 };
+
+function clampCustomWindowDays(value) {
+  const parsed = Math.floor(Number(value));
+  if (!Number.isFinite(parsed)) return 14;
+  return Math.min(Math.max(parsed, 1), 3650);
+}
 
 function createState() {
   return {
@@ -39,6 +46,7 @@ function createState() {
     selectedModel: localStorage.getItem(MODEL_KEY) || "all",
     selectedStackedGroup: localStorage.getItem(STACKED_GROUP_KEY) || "provider",
     ledgerPage: Number(localStorage.getItem(PAGE_KEY) || 1),
+    customWindowDays: clampCustomWindowDays(localStorage.getItem(CUSTOM_WINDOW_DAYS_KEY) || 14),
     listeners: new Set(),
     refreshPromise: null,
     topbarRoot: null,
@@ -290,6 +298,7 @@ export function subscribe(listener) {
 }
 
 export function windowLabel(windowKey) {
+  if (windowKey === "custom") return `Last ${state.customWindowDays} days`;
   return WINDOW_LABELS[windowKey] || WINDOW_LABELS.all;
 }
 
@@ -306,9 +315,19 @@ function setStoredValue(key, value) {
 }
 
 export function updateWindow(windowKey) {
-  state.selectedWindow = windowKey;
+  state.selectedWindow = windowKey === "custom" ? "custom" : WINDOW_LABELS[windowKey] ? windowKey : "all";
   state.ledgerPage = 1;
-  setStoredValue(WINDOW_KEY, windowKey);
+  setStoredValue(WINDOW_KEY, state.selectedWindow);
+  setStoredValue(PAGE_KEY, state.ledgerPage);
+  notify();
+}
+
+export function updateCustomWindowDays(days) {
+  state.customWindowDays = clampCustomWindowDays(days);
+  state.selectedWindow = "custom";
+  state.ledgerPage = 1;
+  setStoredValue(CUSTOM_WINDOW_DAYS_KEY, state.customWindowDays);
+  setStoredValue(WINDOW_KEY, state.selectedWindow);
   setStoredValue(PAGE_KEY, state.ledgerPage);
   notify();
 }

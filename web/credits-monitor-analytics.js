@@ -22,7 +22,8 @@ function scopedUsageEvents(windowKey = state.selectedWindow) {
     "1h": 60 * 60 * 1000,
     "24h": 24 * 60 * 60 * 1000,
     "7d": 7 * 24 * 60 * 60 * 1000,
-    "30d": 30 * 24 * 60 * 60 * 1000
+    "30d": 30 * 24 * 60 * 60 * 1000,
+    custom: state.customWindowDays * 24 * 60 * 60 * 1000
   };
   if (!windows[windowKey]) return [...state.usageEvents];
   const cutoff = now - windows[windowKey];
@@ -157,6 +158,15 @@ function binConfig(events, windowKey = state.selectedWindow) {
     return {
       start: now - 30 * 24 * 60 * 60 * 1000,
       count: 30,
+      sizeMs: 24 * 60 * 60 * 1000,
+      formatter: new Intl.DateTimeFormat(undefined, { month: "short", day: "numeric" })
+    };
+  }
+  if (windowKey === "custom") {
+    const days = state.customWindowDays;
+    return {
+      start: now - days * 24 * 60 * 60 * 1000,
+      count: days,
       sizeMs: 24 * 60 * 60 * 1000,
       formatter: new Intl.DateTimeFormat(undefined, { month: "short", day: "numeric" })
     };

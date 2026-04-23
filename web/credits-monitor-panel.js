@@ -17,6 +17,7 @@ import {
   summarize,
   summariesByWindow,
   updateLedgerPage,
+  updateCustomWindowDays,
   updateModelFilter,
   updateProviderFilter,
   updateSection,
@@ -94,7 +95,7 @@ function headerMarkup(context) {
         <div>
           <div class="cae-panel-eyebrow">Credits</div>
           <h1 class="cae-panel-title">Credits analytics</h1>
-          <p class="cae-panel-copy">Yomfy-style telemetry view: live balance, provider mix, model explorer, usage tables.</p>
+          <p class="cae-panel-copy">Telemetry view: live balance, provider mix, model explorer, usage tables.</p>
         </div>
         <div class="cae-header-actions">
           <button class="cae-button cae-button-pill" data-cae-action="settings">Open Credits Settings</button>
@@ -160,7 +161,22 @@ function filtersMarkup(context) {
   return `
     <section class="cae-shell-card cae-toolbar-card">
       <div class="cae-toolbar-row">
-        <div class="cae-filter-group">${windowButtons}</div>
+        <div class="cae-filter-group">
+          ${windowButtons}
+          <label class="cae-custom-window ${state.selectedWindow === "custom" ? "is-active" : ""}">
+            <span>Custom</span>
+            <input
+              type="number"
+              min="1"
+              max="3650"
+              step="1"
+              value="${state.customWindowDays}"
+              data-cae-custom-days
+              aria-label="Custom range in days"
+            />
+            <span>days</span>
+          </label>
+        </div>
         <div class="cae-filter-group cae-filter-group-selects">
           ${selectMarkup("Provider", context.activeProvider, context.providerOptions, "All providers")}
           ${selectMarkup("Model", context.activeModel, context.modelOptions, "All models")}
@@ -173,20 +189,23 @@ function filtersMarkup(context) {
 
 function overviewMarkup(context) {
   const stackedGroup = state.selectedStackedGroup === "model" ? "model" : "provider";
-  const stacked = buildStackedTimeline(context.providerEvents, {
+  const overviewEvents = context.scopedEvents;
+  const overviewLeaderboard = aggregateModels(overviewEvents, 8);
+  const overviewProviderSummary = aggregateProviders(overviewEvents, 6);
+  const stacked = buildStackedTimeline(overviewEvents, {
     windowKey: state.selectedWindow,
     groupBy: stackedGroup,
     topN: 5
   });
   const shareItems =
     stackedGroup === "model"
-      ? context.modelLeaderboard.slice(0, 6).map((item) => ({
+      ? overviewLeaderboard.slice(0, 6).map((item) => ({
           key: `${item.provider}|||${item.model}`,
           label: item.model,
           value: item.credits,
           total: item.credits
         }))
-      : context.providerSummary.map((item) => ({
+      : overviewProviderSummary.map((item) => ({
           key: item.provider,
           label: item.provider,
           value: item.credits,
@@ -210,7 +229,7 @@ function overviewMarkup(context) {
           series: stacked.series,
           valueFormatter: (value) => fmtCredits(value),
           tooltipFormatter: (bin, segment) => `${segment.label} - ${bin.label}: ${fmtCredits(segment.value)} credits`,
-          emptyMessage: "No provider usage in this window."
+          emptyMessage: `No ${stackedGroup} usage in this scope.`
         })}
       </div>
       <div class="cae-shell-card">
@@ -236,7 +255,7 @@ function overviewMarkup(context) {
             <p>Highest credit consumers in the current scope.</p>
           </div>
         </div>
-        ${modelRowsMarkup(context.modelLeaderboard, context.usageSummary.totalCredits)}
+        ${modelRowsMarkup(overviewLeaderboard, context.usageSummary.totalCredits)}
       </div>
       <div class="cae-shell-card">
         <div class="cae-card-head">
@@ -467,6 +486,11 @@ export function attachPanelEvents(container, onRefresh) {
       return;
     }
     if (event.target.dataset.caeSelect === "model") updateModelFilter(event.target.value);
+  });
+
+  container.addEventListener("change", (event) => {
+    if (!(event.target instanceof HTMLInputElement)) return;
+    if (event.target.matches("[data-cae-custom-days]")) updateCustomWindowDays(event.target.value);
   });
 
   container.addEventListener("mousemove", (event) => {
