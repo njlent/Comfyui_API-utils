@@ -195,7 +195,7 @@ function overviewMarkup(context) {
           bins: stacked.bins,
           series: stacked.series,
           valueFormatter: (value) => fmtCredits(value),
-          tooltipFormatter: (bin, segment) => `${segment.label} · ${bin.label}: ${fmtCredits(segment.value)} credits`,
+          tooltipFormatter: (bin, segment) => `${segment.label} - ${bin.label}: ${fmtCredits(segment.value)} credits`,
           emptyMessage: "No provider usage in this window."
         })}
       </div>
@@ -209,8 +209,9 @@ function overviewMarkup(context) {
         ${renderDonutChart({
           items: providerShare,
           valueFormatter: (value) => fmtCredits(value),
-          centerLabel: "Providers",
           centerValue: fmtCredits(context.usageSummary.totalCredits),
+          centerSubvalue: fmtUsd(context.usageSummary.totalUsd),
+          compactCenter: true,
           emptyMessage: "No provider share yet."
         })}
       </div>
@@ -358,14 +359,65 @@ export function renderPanel() {
   if (!state.panelRoot) return;
   if (state.loading && !state.events.length && !state.error) {
     state.panelRoot.innerHTML = `<div class="cae-empty">Loading credits telemetry...</div>`;
+    ensureChartTooltip(state.panelRoot);
     return;
   }
   state.panelRoot.innerHTML = panelMarkup();
+  ensureChartTooltip(state.panelRoot);
+}
+
+function ensureChartTooltip(container) {
+  let tooltip = document.body.querySelector(".cae-chart-floating-tooltip");
+  if (tooltip) return tooltip;
+  tooltip = document.createElement("div");
+  tooltip.className = "cae-chart-floating-tooltip";
+  tooltip.innerHTML = `
+    <div class="cae-chart-floating-tooltip-title"></div>
+    <div class="cae-chart-floating-tooltip-body"></div>
+  `;
+  document.body.appendChild(tooltip);
+  return tooltip;
+}
+
+function hideChartTooltip(tooltip) {
+  tooltip.classList.remove("is-visible");
+  tooltip.style.transform = "translate(-9999px, -9999px)";
+}
+
+function placeChartTooltip(container, tooltip, clientX, clientY) {
+  const tooltipRect = tooltip.getBoundingClientRect();
+  const offsetX = 18;
+  const offsetY = 18;
+  const minLeft = 12;
+  const maxLeft = window.innerWidth - tooltipRect.width - 12;
+  const minTop = 12;
+  const maxTop = window.innerHeight - tooltipRect.height - 12;
+  let left = clientX + offsetX;
+  let top = clientY + offsetY;
+  if (left > maxLeft) left = clientX - tooltipRect.width - offsetX;
+  left = Math.max(minLeft, Math.min(left, maxLeft));
+  top = Math.max(minTop, Math.min(top, maxTop));
+  tooltip.style.transform = `translate(${Math.round(left)}px, ${Math.round(top)}px)`;
+}
+
+function showChartTooltip(container, tooltip, node, clientX, clientY) {
+  const title = node.dataset.caeTooltipTitle || "";
+  const body = node.dataset.caeTooltipBody || "";
+  tooltip.querySelector(".cae-chart-floating-tooltip-title").textContent = title;
+  tooltip.querySelector(".cae-chart-floating-tooltip-body").textContent = body;
+  tooltip.classList.add("is-visible");
+  placeChartTooltip(container, tooltip, clientX, clientY);
 }
 
 export function attachPanelEvents(container, onRefresh) {
   if (container.dataset.caeBound === "true") return;
   container.dataset.caeBound = "true";
+  let tooltip = ensureChartTooltip(container);
+  const getTooltip = () => {
+    if (!tooltip.isConnected) tooltip = ensureChartTooltip(container);
+    return tooltip;
+  };
+
   container.addEventListener("click", (event) => {
     if (!(event.target instanceof Element)) return;
     const actionButton = event.target.closest("[data-cae-action]");
@@ -396,5 +448,38 @@ export function attachPanelEvents(container, onRefresh) {
       return;
     }
     if (event.target.dataset.caeSelect === "model") updateModelFilter(event.target.value);
+  });
+
+  container.addEventListener("mousemove", (event) => {
+    if (!(event.target instanceof Element)) return;
+    const node = event.target.closest(".cae-chart-node");
+    if (!node) {
+      hideChartTooltip(getTooltip());
+      return;
+    }
+    showChartTooltip(container, getTooltip(), node, event.clientX, event.clientY);
+  });
+
+  container.addEventListener("mouseleave", () => {
+    hideChartTooltip(getTooltip());
+  });
+
+  container.addEventListener("focusin", (event) => {
+    if (!(event.target instanceof Element)) return;
+    const node = event.target.closest(".cae-chart-node");
+    if (!node) return;
+    const rect = node.getBoundingClientRect();
+    showChartTooltip(container, getTooltip(), node, rect.left + rect.width / 2, rect.top + rect.height / 2);
+  });
+
+  container.addEventListener("focusout", () => {
+    requestAnimationFrame(() => {
+      const active = document.activeElement instanceof Element ? document.activeElement.closest(".cae-chart-node") : null;
+      if (!active) hideChartTooltip(getTooltip());
+    });
+  });
+
+  container.addEventListener("scroll", () => {
+    hideChartTooltip(getTooltip());
   });
 }

@@ -124,6 +124,7 @@
 .cae-donut-svg {
   width: 100%;
   height: auto;
+  overflow: visible;
 }
 
 .cae-chart-grid-line {
@@ -151,7 +152,20 @@
   grid-template-columns: 12px minmax(0, 1fr) auto;
   gap: 8px;
   align-items: center;
+  padding: 8px 10px;
+  border: 1px solid transparent;
+  border-radius: 12px;
   font-size: 12px;
+  transition:
+    background 160ms ease,
+    border-color 160ms ease,
+    transform 160ms ease;
+}
+
+.cae-chart-legend-item:hover {
+  background: color-mix(in srgb, var(--cae-panel-soft) 88%, transparent);
+  border-color: color-mix(in srgb, var(--cae-line-strong) 70%, transparent);
+  transform: translateY(-1px);
 }
 
 .cae-chart-legend-swatch {
@@ -189,6 +203,17 @@
   fill: var(--cae-chart-1);
   stroke: var(--cae-panel);
   stroke-width: 2;
+  transition:
+    filter 160ms ease,
+    stroke-width 160ms ease;
+}
+
+.cae-line-guide {
+  stroke: color-mix(in srgb, var(--cae-chart-1) 56%, transparent);
+  stroke-width: 1;
+  stroke-dasharray: 3 5;
+  opacity: 0;
+  transition: opacity 160ms ease;
 }
 
 .cae-donut-track {
@@ -206,6 +231,99 @@
   fill: var(--cae-text);
   font-size: 18px;
   font-weight: 700;
+}
+
+.cae-donut-center-value.is-compact {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.cae-donut-center-subvalue {
+  fill: color-mix(in srgb, var(--cae-text) 72%, transparent);
+  font-size: 10px;
+  font-weight: 600;
+}
+
+.cae-chart-node {
+  cursor: pointer;
+  outline: none;
+}
+
+.cae-chart-node .cae-chart-segment,
+.cae-chart-node .cae-donut-slice {
+  transition:
+    filter 160ms ease,
+    stroke 160ms ease,
+    stroke-width 160ms ease,
+    opacity 160ms ease;
+}
+
+.cae-chart-hitbox {
+  cursor: pointer;
+}
+
+.cae-chart-floating-tooltip {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 9999;
+  width: 176px;
+  padding: 10px 12px;
+  border: 1px solid color-mix(in srgb, var(--cae-line-strong) 82%, transparent);
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--cae-panel) 94%, black);
+  box-shadow: 0 14px 26px rgba(0, 0, 0, 0.28);
+  pointer-events: none;
+  opacity: 0;
+  transform: translate(-9999px, -9999px);
+  transition: opacity 120ms ease;
+}
+
+.cae-chart-floating-tooltip.is-visible {
+  opacity: 1;
+}
+
+.cae-chart-floating-tooltip-title,
+.cae-chart-floating-tooltip-body {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.35;
+}
+
+.cae-chart-floating-tooltip-title {
+  color: var(--cae-text);
+  font-weight: 700;
+}
+
+.cae-chart-floating-tooltip-body {
+  margin-top: 4px;
+  color: color-mix(in srgb, var(--cae-text) 72%, transparent);
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+.cae-chart-node:hover .cae-chart-segment,
+.cae-chart-node:focus-visible .cae-chart-segment {
+  filter: brightness(1.08) drop-shadow(0 8px 18px rgba(0, 0, 0, 0.22));
+  stroke: rgba(255, 255, 255, 0.34);
+  stroke-width: 1.5;
+}
+
+.cae-chart-node:hover .cae-line-guide,
+.cae-chart-node:focus-visible .cae-line-guide {
+  opacity: 1;
+}
+
+.cae-chart-node:hover .cae-line-point,
+.cae-chart-node:focus-visible .cae-line-point {
+  filter: drop-shadow(0 0 10px color-mix(in srgb, var(--cae-chart-1) 55%, transparent));
+  stroke-width: 3;
+}
+
+.cae-chart-node:hover .cae-donut-slice,
+.cae-chart-node:focus-visible .cae-donut-slice {
+  filter: brightness(1.08) drop-shadow(0 10px 18px rgba(0, 0, 0, 0.24));
+  stroke-width: 23;
 }
 
 .cae-activity-table {

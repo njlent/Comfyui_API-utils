@@ -16,16 +16,16 @@ function esc(value) {
     .replaceAll("'", "&#39;");
 }
 
-function clamp(value, min, max) {
-  return Math.max(min, Math.min(max, value));
-}
-
 function getPaletteMap(items) {
   return new Map(items.map((item, index) => [item.key, PALETTE[index % PALETTE.length]]));
 }
 
 function emptyState(message) {
   return `<div class="cae-empty">${esc(message)}</div>`;
+}
+
+function tooltipAttrs(title, body = "") {
+  return `data-cae-tooltip-title="${esc(title)}" data-cae-tooltip-body="${esc(body)}"`;
 }
 
 function legendMarkup(items, paletteMap, valueFormatter) {
@@ -84,19 +84,37 @@ export function renderStackedBarChart({
       let cursor = padding.top + chartHeight;
       const rects = bin.segments
         .map((segment) => {
+          if (!segment.value) return "";
           const heightValue = (segment.value / maxTotal) * chartHeight;
-          const segmentHeight = Math.max(segment.value ? heightValue : 0, segment.value ? 3 : 0);
+          const segmentHeight = Math.max(segment.value ? heightValue : 0, 3);
           cursor -= segmentHeight;
+          const body = `${bin.label} | ${valueFormatter(segment.value)}`;
           return `
-            <rect
-              x="${x}"
-              y="${cursor}"
-              width="${barWidth}"
-              height="${segmentHeight}"
-              fill="${paletteMap.get(segment.key)}"
+            <g
+              class="cae-chart-node"
+              tabindex="0"
+              role="img"
+              aria-label="${esc(tooltipFormatter(bin, segment))}"
+              ${tooltipAttrs(segment.label, body)}
             >
+              <rect
+                x="${x}"
+                y="${cursor}"
+                width="${barWidth}"
+                height="${segmentHeight}"
+                fill="${paletteMap.get(segment.key)}"
+                class="cae-chart-segment"
+              ></rect>
+              <rect
+                x="${x - 3}"
+                y="${cursor}"
+                width="${barWidth + 6}"
+                height="${Math.max(segmentHeight, 12)}"
+                fill="transparent"
+                class="cae-chart-hitbox"
+              ></rect>
               <title>${esc(tooltipFormatter(bin, segment))}</title>
-            </rect>
+            </g>
           `;
         })
         .join("");
@@ -166,9 +184,17 @@ export function renderLineChart({
   const pointsMarkup = mapped
     .map(
       (point) => `
-        <g>
+        <g
+          class="cae-chart-node"
+          tabindex="0"
+          role="img"
+          aria-label="${esc(`${label} | ${point.label}: ${valueFormatter(point.value)}`)}"
+          ${tooltipAttrs(label, `${point.label} | ${valueFormatter(point.value)}`)}
+        >
+          <line x1="${point.x}" y1="${point.y}" x2="${point.x}" y2="${padding.top + chartHeight}" class="cae-line-guide"></line>
           <circle cx="${point.x}" cy="${point.y}" r="4.5" class="cae-line-point"></circle>
-          <title>${esc(`${label} · ${point.label}: ${valueFormatter(point.value)}`)}</title>
+          <circle cx="${point.x}" cy="${point.y}" r="12" fill="transparent" class="cae-chart-hitbox"></circle>
+          <title>${esc(`${label} | ${point.label}: ${valueFormatter(point.value)}`)}</title>
         </g>
       `
     )
@@ -205,6 +231,8 @@ export function renderDonutChart({
   valueFormatter,
   centerLabel,
   centerValue,
+  centerSubvalue,
+  compactCenter = false,
   emptyMessage = "No breakdown data."
 }) {
   const filtered = items.filter((item) => item.value > 0);
@@ -213,26 +241,53 @@ export function renderDonutChart({
   const total = filtered.reduce((sum, item) => sum + item.value, 0);
   const radius = 58;
   const circumference = 2 * Math.PI * radius;
+  const hasLabel = Boolean(centerLabel);
+  const hasSubvalue = Boolean(centerSubvalue);
+  const centerLabelY = hasSubvalue ? 68 : 72;
+  const centerValueY = hasLabel ? (hasSubvalue ? 91 : 98) : hasSubvalue ? 86 : 96;
+  const centerSubvalueY = hasSubvalue ? (hasLabel ? 109 : 103) : 0;
   let offset = 0;
   const slices = filtered
     .map((item) => {
       const ratio = item.value / total;
       const dash = ratio * circumference;
+      const body = `${valueFormatter(item.value)} | ${(ratio * 100).toFixed(1)}% share`;
       const node = `
-        <circle
-          cx="90"
-          cy="90"
-          r="${radius}"
-          fill="none"
-          stroke="${paletteMap.get(item.key)}"
-          stroke-width="20"
-          stroke-linecap="butt"
-          stroke-dasharray="${dash} ${circumference - dash}"
-          stroke-dashoffset="${-offset}"
-          transform="rotate(-90 90 90)"
+        <g
+          class="cae-chart-node"
+          tabindex="0"
+          role="img"
+          aria-label="${esc(`${item.label}: ${valueFormatter(item.value)}`)}"
+          ${tooltipAttrs(item.label, body)}
         >
+          <circle
+            cx="90"
+            cy="90"
+            r="${radius}"
+            fill="none"
+            stroke="${paletteMap.get(item.key)}"
+            stroke-width="20"
+            stroke-linecap="butt"
+            stroke-dasharray="${dash} ${circumference - dash}"
+            stroke-dashoffset="${-offset}"
+            transform="rotate(-90 90 90)"
+            class="cae-donut-slice"
+          ></circle>
+          <circle
+            cx="90"
+            cy="90"
+            r="${radius}"
+            fill="none"
+            stroke="transparent"
+            stroke-width="30"
+            stroke-linecap="butt"
+            stroke-dasharray="${dash} ${circumference - dash}"
+            stroke-dashoffset="${-offset}"
+            transform="rotate(-90 90 90)"
+            class="cae-chart-hitbox"
+          ></circle>
           <title>${esc(`${item.label}: ${valueFormatter(item.value)}`)}</title>
-        </circle>
+        </g>
       `;
       offset += dash;
       return node;
@@ -244,8 +299,22 @@ export function renderDonutChart({
       <svg viewBox="0 0 180 180" class="cae-donut-svg" role="img" aria-label="Credits share chart">
         <circle cx="90" cy="90" r="${radius}" fill="none" class="cae-donut-track" stroke-width="20"></circle>
         ${slices}
-        <text x="90" y="82" text-anchor="middle" class="cae-donut-center-label">${esc(centerLabel)}</text>
-        <text x="90" y="106" text-anchor="middle" class="cae-donut-center-value">${esc(centerValue)}</text>
+        ${
+          hasLabel
+            ? `<text x="90" y="${centerLabelY}" text-anchor="middle" class="cae-donut-center-label">${esc(centerLabel)}</text>`
+            : ""
+        }
+        <text
+          x="90"
+          y="${centerValueY}"
+          text-anchor="middle"
+          class="cae-donut-center-value ${compactCenter ? "is-compact" : ""}"
+        >${esc(centerValue)}</text>
+        ${
+          hasSubvalue
+            ? `<text x="90" y="${centerSubvalueY}" text-anchor="middle" class="cae-donut-center-subvalue">${esc(centerSubvalue)}</text>`
+            : ""
+        }
       </svg>
       ${legendMarkup(filtered, paletteMap, valueFormatter)}
     </div>
