@@ -163,7 +163,7 @@ function filtersMarkup(context) {
       <div class="cae-toolbar-row">
         <div class="cae-filter-group">
           ${windowButtons}
-          <label class="cae-custom-window ${state.selectedWindow === "custom" ? "is-active" : ""}">
+          <label class="cae-custom-window ${state.selectedWindow === "custom" ? "is-active" : ""}" data-cae-window="custom">
             <span>Custom</span>
             <input
               type="number"
