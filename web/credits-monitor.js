@@ -57,8 +57,17 @@ function topbarMarkup() {
         <div class="cae-topbar-secondary">${esc(secondary)}</div>
       </div>
       <div class="cae-topbar-actions">
-        <button class="cae-button cae-button-pill" data-cae-action="refresh">Sync</button>
-        <button class="cae-button cae-button-pill" data-cae-action="${authed ? "open" : "signin"}">${authed ? "Analytics" : "Sign In"}</button>
+        <button class="cae-button cae-button-icon" data-cae-action="refresh" title="Sync credits" aria-label="Sync credits">
+          <i class="mdi mdi-refresh"></i>
+        </button>
+        <button
+          class="cae-button cae-button-icon"
+          data-cae-action="${authed ? "open" : "signin"}"
+          title="${authed ? "Open analytics" : "Open sign in"}"
+          aria-label="${authed ? "Open analytics" : "Open sign in"}"
+        >
+          <i class="mdi ${authed ? "mdi-chart-box-outline" : "mdi-login"}"></i>
+        </button>
       </div>
     </div>
   `;
