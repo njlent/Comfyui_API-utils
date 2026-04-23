@@ -97,7 +97,7 @@ function headerMarkup(context) {
         <div>
           <div class="cae-panel-eyebrow">Credits</div>
           <h1 class="cae-panel-title">Credits analytics</h1>
-          <p class="cae-panel-copy">Telemetry view: live balance, provider mix, model explorer, usage tables.</p>
+          <p class="cae-panel-copy">Telemetry view: live balance, provider mix, model breakdowns, usage tables.</p>
         </div>
         <div class="cae-header-actions">
           <button class="cae-button cae-button-pill" data-cae-action="settings">Open Credits Settings</button>
@@ -148,7 +148,7 @@ function filtersMarkup(context) {
     .join("");
   const sectionButtons = [
     ["overview", "Overview"],
-    ["models", "Model Explorer"],
+    ["models", "Models"],
     ["activity", "Activity"],
     ["balance", "Balance"]
   ]
