@@ -28,6 +28,19 @@ const FIXED_RUN_CREDITS = {
   "kling:std:kling-v2-5-turbo": 73.85
 };
 
+const CLOUD_WORKFLOW_CREDIT_RATES = [
+  {
+    before: "2026-01-24T00:00:00.000Z",
+    creditsPerSecond: 0.39,
+    defaultBillableSeconds: 1
+  },
+  {
+    from: "2026-01-24T00:00:00.000Z",
+    creditsPerSecond: 0.266,
+    defaultBillableSeconds: 1
+  }
+];
+
 const MODEL_TOKEN_RATES = {
   "openai:gpt-5": { input_text_tokens: 263.75, cached_input_text_tokens: 26.38, output_text_tokens: 2110 },
   "openai:gpt-5-mini": { input_text_tokens: 52.75, cached_input_text_tokens: 5.28, output_text_tokens: 422 },
@@ -77,12 +90,125 @@ const MODEL_TOKEN_RATES = {
 };
 
 function num(value, fallback = 0) {
-  const parsed = Number(value);
+  const normalized =
+    typeof value === "string"
+      ? value.includes(",") && !value.includes(".")
+        ? value.replace(",", ".")
+        : value.replaceAll(",", "")
+      : value;
+  const parsed = Number(normalized);
   return Number.isFinite(parsed) ? parsed : fallback;
 }
 
 export function estimateCredits(event) {
-  return estimateXaiCredits(event) ?? estimateFixedCredits(event) ?? estimateKlingCredits(event) ?? estimateTokenCredits(event);
+  return estimateCloudWorkflowCredits(event) ??
+    estimateXaiCredits(event) ??
+    estimateFixedCredits(event) ??
+    estimateKlingCredits(event) ??
+    estimateTokenCredits(event);
+}
+
+function eventDate(event) {
+  const value = event?.createdAt || event?.created_at;
+  const date = value ? new Date(value) : new Date();
+  return Number.isNaN(date.getTime()) ? new Date() : date;
+}
+
+function cloudWorkflowRateFor(date) {
+  const time = date.getTime();
+  return CLOUD_WORKFLOW_CREDIT_RATES.find((entry) => {
+    if (entry.before && time >= new Date(entry.before).getTime()) return false;
+    if (entry.from && time < new Date(entry.from).getTime()) return false;
+    return true;
+  }) || null;
+}
+
+function firstNumber(params, keys) {
+  for (const key of keys) {
+    if (params[key] !== undefined && params[key] !== null) return num(params[key], 0);
+  }
+  return 0;
+}
+
+function durationHoursFromTimestamps(params) {
+  const start = params.started_at || params.startedAt || params.start_time || params.startTime;
+  const end = params.ended_at || params.endedAt || params.end_time || params.endTime;
+  if (!start || !end) return 0;
+  const startMs = new Date(start).getTime();
+  const endMs = new Date(end).getTime();
+  if (!Number.isFinite(startMs) || !Number.isFinite(endMs) || endMs <= startMs) return 0;
+  return (endMs - startMs) / 3_600_000;
+}
+
+function cloudWorkflowDurationSeconds(params) {
+  const hours = firstNumber(params, [
+    "hours",
+    "duration_hours",
+    "durationHours",
+    "billable_hours",
+    "billableHours",
+    "runtime_hours",
+    "runtimeHours"
+  ]);
+  if (hours > 0) return hours * 3600;
+
+  const minutes = firstNumber(params, [
+    "minutes",
+    "duration_minutes",
+    "durationMinutes",
+    "billable_minutes",
+    "billableMinutes",
+    "runtime_minutes",
+    "runtimeMinutes",
+    "elapsed_minutes",
+    "elapsedMinutes"
+  ]);
+  if (minutes > 0) return minutes * 60;
+
+  const seconds = firstNumber(params, [
+    "seconds",
+    "duration_seconds",
+    "durationSeconds",
+    "billable_seconds",
+    "billableSeconds",
+    "runtime_seconds",
+    "runtimeSeconds",
+    "elapsed_seconds",
+    "elapsedSeconds",
+    "execution_seconds",
+    "executionSeconds",
+    "gpu_seconds",
+    "gpuSeconds",
+    "gpu_time_seconds",
+    "gpuTimeSeconds"
+  ]);
+  if (seconds > 0) return seconds;
+
+  const milliseconds = firstNumber(params, [
+    "milliseconds",
+    "duration_ms",
+    "durationMs",
+    "billable_ms",
+    "billableMs",
+    "runtime_ms",
+    "runtimeMs",
+    "elapsed_ms",
+    "elapsedMs",
+    "execution_time_ms",
+    "executionTimeMs"
+  ]);
+  if (milliseconds > 0) return milliseconds / 1000;
+
+  return durationHoursFromTimestamps(params) * 3600;
+}
+
+function estimateCloudWorkflowCredits(event) {
+  if (event?.event_type !== "cloud_workflow_executed" && event?.eventType !== "cloud_workflow_executed") return null;
+  const rate = cloudWorkflowRateFor(eventDate(event));
+  if (!rate) return null;
+  const seconds = cloudWorkflowDurationSeconds(event?.params || {}) || rate.defaultBillableSeconds || 0;
+  if (!seconds) return null;
+  return seconds * rate.creditsPerSecond;
 }
 
 function rateTableForEvent(event) {

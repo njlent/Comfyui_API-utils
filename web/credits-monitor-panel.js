@@ -3,6 +3,7 @@ import {
   aggregateProviders,
   buildLineTimeline,
   buildStackedTimeline,
+  creditAddedEventsInWindow,
   filterUsageEvents,
   fmtCount,
   fmtCredits,
@@ -15,6 +16,7 @@ import {
   paginateEvents,
   state,
   summarize,
+  summarizeCreditsAdded,
   summariesByWindow,
   updateLedgerPage,
   updateCustomWindowDays,
@@ -38,6 +40,7 @@ import {
   modelRowsMarkup,
   selectMarkup,
   snapshotCardsMarkup,
+  topUpTableMarkup,
   usageTableMarkup
 } from "./credits-monitor-ui-fragments.js";
 
@@ -67,6 +70,7 @@ function buildContext() {
           provider: activeProvider,
           model: focusModel
         });
+  const topupEvents = creditAddedEventsInWindow();
   return {
     activeProvider,
     activeModel,
@@ -81,7 +85,9 @@ function buildContext() {
     modelLeaderboard,
     snapshots: summariesByWindow(),
     pagedUsage: paginateEvents(scopedEvents, state.ledgerPage),
-    recentBilling: paginateEvents(state.events, 1, 6)
+    recentBilling: paginateEvents(state.events, 1, 6),
+    topupSummary: summarizeCreditsAdded(topupEvents),
+    pagedTopups: paginateEvents(topupEvents, state.ledgerPage)
   };
 }
 
@@ -147,7 +153,8 @@ function filtersMarkup(context) {
   const sectionButtons = [
     ["overview", "Overview"],
     ["models", "Models"],
-    ["activity", "Activity"]
+    ["activity", "Activity"],
+    ["topups", "Credits Added"]
   ]
     .map(
       ([key, label]) => `
@@ -363,9 +370,50 @@ function activityMarkup(context) {
   `;
 }
 
+function topupsMarkup(context) {
+  const latest = context.topupSummary.latest
+    ? fmtDateFull(context.topupSummary.latest.createdAt)
+    : "No top-ups yet";
+  return `
+    <section class="cae-section-grid">
+      <div class="cae-shell-card cae-card-span-3">
+        <div class="cae-metric-strip">
+          <div class="cae-metric-card">
+            <span>Total added</span>
+            <strong>${fmtCredits(context.topupSummary.totalCredits)}</strong>
+          </div>
+          <div class="cae-metric-card">
+            <span>USD value</span>
+            <strong>${fmtUsd(context.topupSummary.totalUsd)}</strong>
+          </div>
+          <div class="cae-metric-card">
+            <span>Top-ups</span>
+            <strong>${fmtCount(context.topupSummary.count)}</strong>
+          </div>
+          <div class="cae-metric-card">
+            <span>Latest</span>
+            <strong title="${esc(latest)}">${esc(latest)}</strong>
+          </div>
+        </div>
+      </div>
+      <div class="cae-shell-card cae-card-span-3">
+        <div class="cae-card-head">
+          <div>
+            <h3>Credits added history</h3>
+            <p>Top-up events in the selected window, with added value and converted credits.</p>
+          </div>
+          <div class="cae-inline-note">${fmtCount(context.pagedTopups.total)} top-up events</div>
+        </div>
+        ${topUpTableMarkup(context)}
+      </div>
+    </section>
+  `;
+}
+
 function sectionMarkup(context) {
   if (state.selectedSection === "models") return modelExplorerMarkup(context);
   if (state.selectedSection === "activity") return activityMarkup(context);
+  if (state.selectedSection === "topups") return topupsMarkup(context);
   return overviewMarkup(context);
 }
 

@@ -12,11 +12,16 @@ const WINDOW_LABELS = {
 export function describeEvent(event) {
   if (event.type === "credit_added") return "Credits added";
   if (event.type === "account_created") return "Account created";
+  if (event.type === "cloud_workflow_executed") return `${event.provider} / ${event.model}`;
   if (event.type === "api_usage_completed") return `${event.provider} / ${event.model}`;
   return `${event.type.replaceAll("_", " ")} / ${event.model}`;
 }
 
 function scopedUsageEvents(windowKey = state.selectedWindow) {
+  return scopedEvents(state.usageEvents, windowKey);
+}
+
+function scopedEvents(events, windowKey = state.selectedWindow) {
   const now = Date.now();
   const windows = {
     "1h": 60 * 60 * 1000,
@@ -25,13 +30,17 @@ function scopedUsageEvents(windowKey = state.selectedWindow) {
     "30d": 30 * 24 * 60 * 60 * 1000,
     custom: state.customWindowDays * 24 * 60 * 60 * 1000
   };
-  if (!windows[windowKey]) return [...state.usageEvents];
+  if (!windows[windowKey]) return [...events];
   const cutoff = now - windows[windowKey];
-  return state.usageEvents.filter((event) => event.date.getTime() >= cutoff);
+  return events.filter((event) => event.date.getTime() >= cutoff);
 }
 
 export function usageEventsInWindow(windowKey = state.selectedWindow) {
   return scopedUsageEvents(windowKey);
+}
+
+export function creditAddedEventsInWindow(windowKey = state.selectedWindow) {
+  return scopedEvents(state.creditAddedEvents, windowKey);
 }
 
 export function filterUsageEvents({
@@ -73,6 +82,18 @@ export function summariesByWindow() {
     label,
     ...summarize(usageEventsInWindow(key))
   }));
+}
+
+export function summarizeCreditsAdded(events) {
+  const totalCredits = events.reduce((sum, event) => sum + event.credits, 0);
+  const totalUsd = events.reduce((sum, event) => sum + event.usd, 0);
+  return {
+    totalCredits,
+    totalUsd,
+    count: events.length,
+    latest: events[0] || null,
+    avgCredits: events.length ? totalCredits / events.length : 0
+  };
 }
 
 function sortedOptions(values) {

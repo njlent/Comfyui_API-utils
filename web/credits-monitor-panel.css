@@ -137,6 +137,13 @@
   align-content: center;
 }
 
+.cae-activity-credits {
+  display: grid;
+  grid-template-rows: repeat(2, minmax(0, auto));
+  justify-items: end;
+  align-content: center;
+}
+
 .cae-model-row-metric strong,
 .cae-model-row-metric span,
 .cae-activity-credits strong,
@@ -369,6 +376,10 @@
   grid-template-columns: 160px minmax(0, 1.3fr) 120px 140px;
 }
 
+.cae-topup-row {
+  grid-template-columns: 150px minmax(0, 1fr) 150px minmax(180px, 0.9fr);
+}
+
 .cae-activity-row.is-head {
   background: transparent;
   color: var(--cae-muted);
@@ -393,6 +404,16 @@
   color: #98c2ff;
   font-size: 12px;
   font-weight: 700;
+}
+
+.cae-topup-badge {
+  background: rgba(119, 209, 146, 0.16);
+  color: var(--cae-success);
+}
+
+.cae-cloud-workflow-badge {
+  background: rgba(244, 180, 55, 0.18);
+  color: var(--cae-gold);
 }
 
 .cae-pagination {

@@ -91,8 +91,14 @@ export function modelRowsMarkup(items, totalCredits) {
 
 function tableBadge(event) {
   if (event.type === "api_usage_completed") return "API Usage";
+  if (event.type === "cloud_workflow_executed") return "Cloud Workflow";
   if (event.type === "credit_added") return "Top-up";
   return event.type.replaceAll("_", " ");
+}
+
+function tableBadgeClass(event) {
+  if (event.type === "cloud_workflow_executed") return "cae-cloud-workflow-badge";
+  return "";
 }
 
 export function usageTableMarkup(context) {
@@ -101,7 +107,7 @@ export function usageTableMarkup(context) {
     .map(
       (event) => `
         <div class="cae-activity-row">
-          <div><span class="cae-usage-badge">${esc(tableBadge(event))}</span></div>
+          <div><span class="cae-usage-badge ${tableBadgeClass(event)}">${esc(tableBadge(event))}</span></div>
           <div class="cae-activity-details">
             <strong>${esc(event.provider)}</strong>
             <span title="${esc(event.model)}">Model: ${esc(event.model)}</span>
@@ -179,6 +185,72 @@ export function billingLedgerMarkup(context) {
           `
         )
         .join("")}
+    </div>
+  `;
+}
+
+export function topUpTableMarkup(context) {
+  if (!context.pagedTopups.items.length) return `<div class="cae-empty">No credits added in this window.</div>`;
+  const rows = context.pagedTopups.items
+    .map(
+      (event) => `
+        <div class="cae-activity-row cae-topup-row">
+          <div><span class="cae-usage-badge cae-topup-badge">Credits Added</span></div>
+          <div class="cae-activity-details">
+            <strong class="cae-positive">+${fmtUsd(event.usd)}</strong>
+            <span>${fmtCredits(event.credits)} credits added</span>
+          </div>
+          <div class="cae-activity-time" title="${esc(fmtDateFull(event.createdAt))}">${esc(fmtDate(event.createdAt))}</div>
+          <div class="cae-activity-details">
+            <strong>${esc(event.id)}</strong>
+            <span>${Object.keys(event.params || {}).length ? "Details available in event payload" : "No extra details"}</span>
+          </div>
+        </div>
+      `
+    )
+    .join("");
+
+  const pages = [];
+  const start = Math.max(1, context.pagedTopups.page - 2);
+  const end = Math.min(context.pagedTopups.pageCount, start + 4);
+  for (let page = start; page <= end; page += 1) pages.push(page);
+
+  return `
+    <div class="cae-activity-table">
+      <div class="cae-activity-row cae-topup-row is-head">
+        <div>Event Type</div>
+        <div>Amount</div>
+        <div>Time</div>
+        <div>Event ID</div>
+      </div>
+      ${rows}
+      <div class="cae-pagination">
+        <button class="cae-page-button is-wide" data-cae-page="1" ${context.pagedTopups.page <= 1 ? "disabled" : ""}>First</button>
+        <button class="cae-page-button" data-cae-page="${context.pagedTopups.page - 1}" ${context.pagedTopups.page <= 1 ? "disabled" : ""}>&lsaquo;</button>
+        ${pages
+          .map(
+            (page) => `
+              <button class="cae-page-button ${page === context.pagedTopups.page ? "is-active" : ""}" data-cae-page="${page}">
+                ${page}
+              </button>
+            `
+          )
+          .join("")}
+        <label class="cae-page-jump">
+          <span>Page</span>
+          <input
+            type="number"
+            min="1"
+            max="${context.pagedTopups.pageCount}"
+            value="${context.pagedTopups.page}"
+            data-cae-page-jump
+            aria-label="Credits added page"
+          />
+          <span>of ${fmtCount(context.pagedTopups.pageCount)}</span>
+        </label>
+        <button class="cae-page-button" data-cae-page="${context.pagedTopups.page + 1}" ${context.pagedTopups.page >= context.pagedTopups.pageCount ? "disabled" : ""}>&rsaquo;</button>
+        <button class="cae-page-button is-wide" data-cae-page="${context.pagedTopups.pageCount}" ${context.pagedTopups.page >= context.pagedTopups.pageCount ? "disabled" : ""}>Last</button>
+      </div>
     </div>
   `;
 }

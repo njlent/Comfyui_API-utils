@@ -39,6 +39,7 @@ function createState() {
     balance: null,
     events: [],
     usageEvents: [],
+    creditAddedEvents: [],
     lastUpdated: null,
     selectedWindow: localStorage.getItem(WINDOW_KEY) || "24h",
     selectedSection: localStorage.getItem(SECTION_KEY) || "overview",
@@ -54,7 +55,8 @@ function createState() {
     autoRefreshHandle: 0,
     autoRefreshStarted: false,
     panelRoot: null,
-    setupDone: false
+    setupDone: false,
+    cloudAuthDetected: false
   };
 }
 
@@ -84,10 +86,16 @@ function toUsdFromCredits(credits) {
   return credits / CREDITS_PER_USD;
 }
 
+function addHeader(headers, key, value) {
+  if (!value) return;
+  headers[key] = value;
+}
+
 export function fmtCredits(value) {
+  const abs = Math.abs(value);
   return new Intl.NumberFormat(undefined, {
-    minimumFractionDigits: value < 100 ? 2 : 0,
-    maximumFractionDigits: 2
+    minimumFractionDigits: abs > 0 && abs < 0.01 ? 4 : abs < 100 ? 2 : 0,
+    maximumFractionDigits: abs > 0 && abs < 0.01 ? 4 : 2
   }).format(value);
 }
 
@@ -117,16 +125,105 @@ export function fmtDateFull(value) {
   return new Date(value).toLocaleString();
 }
 
-function authHeaders() {
-  if (api.authToken) return { Authorization: `Bearer ${api.authToken}` };
-  if (api.apiKey) return { "X-API-KEY": api.apiKey };
+function staticAuthHeaders() {
+  const headers = {};
+  addHeader(headers, "Authorization", api.authToken ? `Bearer ${api.authToken}` : "");
+  addHeader(headers, "X-API-KEY", api.apiKey);
   const stored = localStorage.getItem("comfy_api_key");
-  if (stored) return { "X-API-KEY": stored };
-  return {};
+  addHeader(headers, "X-API-KEY", stored);
+  return headers;
+}
+
+function findFrontendAssetBase() {
+  const urls = [
+    ...[...document.scripts].map((script) => script.src),
+    ...performance.getEntriesByType("resource").map((entry) => entry.name)
+  ].filter(Boolean);
+  const assetUrl = urls.find((url) => /\/assets\/(?:api|index)-[^/]+\.js(?:\?|$)/.test(url));
+  if (assetUrl) return new URL("./", assetUrl);
+  return new URL(`${api.api_base || ""}/assets/`, window.location.origin);
+}
+
+function storeValue(value) {
+  return value && typeof value === "object" && "value" in value ? value.value : value;
+}
+
+function delay(ms) {
+  return new Promise((resolve) => window.setTimeout(resolve, ms));
+}
+
+async function waitForAuthStore(store) {
+  for (let attempt = 0; attempt < 50; attempt += 1) {
+    if (storeValue(store.isInitialized) !== false) return;
+    await delay(100);
+  }
+}
+
+async function getFirebaseAuthStore() {
+  if (typeof api.getAuthStore === "function") {
+    try {
+      const store = await api.getAuthStore();
+      if (store) {
+        await waitForAuthStore(store);
+        return store;
+      }
+    } catch {
+      // Non-cloud builds return no store here; fall through to module discovery.
+    }
+  }
+
+  const source = typeof api.getAuthStore === "function" ? String(api.getAuthStore) : "";
+  const moduleName = source.match(/firebaseAuthStore-[^"`')]+\.js/)?.[0];
+  if (!moduleName) return null;
+
+  const moduleUrl = new URL(moduleName, findFrontendAssetBase()).toString();
+  const module = await import(moduleUrl);
+  const store = module.useFirebaseAuthStore?.() || null;
+  if (store) await waitForAuthStore(store);
+  return store;
+}
+
+async function firebaseAuthHeaders() {
+  try {
+    const store = await getFirebaseAuthStore();
+    if (!store) return {};
+    let header = null;
+    if (typeof store.getFirebaseAuthHeader === "function") {
+      header = await store.getFirebaseAuthHeader();
+    }
+    if (!header && typeof store.getAuthHeader === "function") {
+      header = await store.getAuthHeader();
+    }
+    return header || {};
+  } catch (error) {
+    console.warn("ComfyUI API Enhance: failed to read Comfy auth store", error);
+    return {};
+  }
+}
+
+async function authHeaders() {
+  const headers = staticAuthHeaders();
+  if (Object.keys(headers).length) {
+    state.cloudAuthDetected = true;
+    return headers;
+  }
+
+  const firebaseHeaders = await firebaseAuthHeaders();
+  state.cloudAuthDetected = Object.keys(firebaseHeaders).length > 0;
+  return firebaseHeaders;
 }
 
 export function hasCloudAuth() {
-  return Boolean(api.authToken || api.apiKey || localStorage.getItem("comfy_api_key"));
+  return Boolean(
+    api.authToken ||
+      api.apiKey ||
+      localStorage.getItem("comfy_api_key") ||
+      state.cloudAuthDetected
+  );
+}
+
+async function hasCloudAuthAsync() {
+  return Object.keys(await authHeaders()).length > 0;
 }
 
 export function openUserSettings() {
@@ -164,7 +261,7 @@ async function requestJson(route, params = {}) {
   });
   const response = await fetch(url.toString(), {
     method: "GET",
-    headers: authHeaders(),
+    headers: await authHeaders(),
     cache: "no-store"
   });
   if (!response.ok) {
@@ -182,7 +279,7 @@ async function requestCloudJson(route, params = {}) {
   });
   const response = await fetch(url.toString(), {
     method: "GET",
-    headers: authHeaders(),
+    headers: await authHeaders(),
     cache: "no-store"
   });
   if (!response.ok) {
@@ -211,8 +308,16 @@ function normalizeBalance(payload) {
 
 function normalizeEvent(event) {
   const params = event?.params || {};
+  const type = String(event?.event_type || event?.eventType || "unknown");
   const estimatedCredits = estimateCredits(event);
-  const cents = num(params.cost ?? params.amount_cents ?? params.charge_cents ?? params.amount);
+  const cents = num(
+    params.cost ??
+      params.amount_cents ??
+      params.charge_cents ??
+      params.amount ??
+      params.amount_micros ??
+      params.amountMicros
+  );
   const explicitCredits = estimatedCredits ?? params.credits_used ?? params.credits ?? null;
   const credits =
     explicitCredits !== null && explicitCredits !== undefined
@@ -225,12 +330,18 @@ function normalizeEvent(event) {
       : cents
         ? toUsdFromCents(cents)
         : toUsdFromCredits(credits);
-  const provider = String(params.api_name ?? params.provider ?? params.service ?? "API");
-  const model = String(params.model ?? params.model_name ?? params.engine ?? "Unknown model");
+  const provider =
+    type === "cloud_workflow_executed"
+      ? "Comfy Cloud"
+      : String(params.api_name ?? params.provider ?? params.service ?? "API");
+  const model =
+    type === "cloud_workflow_executed"
+      ? String(params.workflow_name ?? params.workflowName ?? params.name ?? "Cloud workflow")
+      : String(params.model ?? params.model_name ?? params.engine ?? "Unknown model");
   const createdAt = event?.createdAt || event?.created_at || new Date().toISOString();
   return {
     id: event?.event_id || event?.eventId || event?.id || crypto.randomUUID(),
-    type: String(event?.event_type || event?.eventType || "unknown"),
+    type,
     createdAt,
     date: new Date(createdAt),
     provider,
@@ -334,7 +445,9 @@ export function updateCustomWindowDays(days) {
 
 export function updateSection(section) {
   state.selectedSection = section;
+  state.ledgerPage = 1;
   setStoredValue(SECTION_KEY, section);
+  setStoredValue(PAGE_KEY, state.ledgerPage);
   notify();
 }
 
@@ -374,7 +487,7 @@ export function openPanel() {
 
 export async function refreshData(force = false) {
   if (state.refreshPromise && !force) return state.refreshPromise;
-  if (!hasCloudAuth()) {
+  if (!(await hasCloudAuthAsync())) {
     state.loading = false;
     state.error = "Sign in to Comfy in Settings > User.";
     notify();
@@ -391,7 +504,10 @@ export async function refreshData(force = false) {
       state.events = payload.events
         .map(normalizeEvent)
         .sort((a, b) => b.date.getTime() - a.date.getTime());
-      state.usageEvents = state.events.filter((event) => event.type === "api_usage_completed");
+      state.usageEvents = state.events.filter((event) =>
+        event.type === "api_usage_completed" || event.type === "cloud_workflow_executed"
+      );
+      state.creditAddedEvents = state.events.filter((event) => event.type === "credit_added");
       state.lastUpdated = new Date();
     } catch (error) {
       state.error =
