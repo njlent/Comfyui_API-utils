@@ -315,8 +315,6 @@ function modelExplorerMarkup(context) {
         ${renderDonutChart({
           items: modelShare,
           valueFormatter: (value) => fmtCredits(value),
-          centerLabel: "Models",
-          centerValue: fmtCount(context.modelLeaderboard.length),
           emptyMessage: "No model share to show."
         })}
       </div>
