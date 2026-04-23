@@ -395,6 +395,8 @@
 
 .cae-pagination {
   display: flex;
+  align-items: center;
+  flex-wrap: wrap;
   justify-content: center;
   gap: 8px;
   margin-top: 6px;
@@ -405,6 +407,37 @@
   height: 34px;
   font-size: 12px;
   font-weight: 600;
+}
+
+.cae-page-button.is-wide {
+  width: auto;
+  min-width: 54px;
+  padding: 0 12px;
+}
+
+.cae-page-jump {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 34px;
+  padding: 0 10px;
+  border: 1px solid var(--cae-line);
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--cae-panel-soft) 84%, transparent);
+  color: var(--cae-muted);
+  font-size: 12px;
+}
+
+.cae-page-jump input {
+  width: 64px;
+  height: 24px;
+  padding: 0 7px;
+  border: 1px solid var(--cae-line);
+  border-radius: 7px;
+  background: color-mix(in srgb, var(--cae-panel) 86%, black);
+  color: var(--cae-text);
+  font: inherit;
+  font-variant-numeric: tabular-nums;
 }
 
 .cae-ledger-row {

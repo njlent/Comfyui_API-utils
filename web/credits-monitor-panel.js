@@ -543,6 +543,7 @@ export function attachPanelEvents(container, onRefresh) {
   container.addEventListener("change", (event) => {
     if (!(event.target instanceof HTMLInputElement)) return;
     if (event.target.matches("[data-cae-custom-days]")) updateCustomWindowDays(event.target.value);
+    if (event.target.matches("[data-cae-page-jump]")) updateLedgerPage(event.target.value);
   });
 
   container.addEventListener("mousemove", (event) => {

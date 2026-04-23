@@ -137,6 +137,7 @@ export function usageTableMarkup(context) {
       </div>
       ${rows}
       <div class="cae-pagination">
+        <button class="cae-page-button is-wide" data-cae-page="1" ${context.pagedUsage.page <= 1 ? "disabled" : ""}>First</button>
         <button class="cae-page-button" data-cae-page="${context.pagedUsage.page - 1}" ${context.pagedUsage.page <= 1 ? "disabled" : ""}>‹</button>
         ${pages
           .map(
@@ -147,7 +148,20 @@ export function usageTableMarkup(context) {
             `
           )
           .join("")}
+        <label class="cae-page-jump">
+          <span>Page</span>
+          <input
+            type="number"
+            min="1"
+            max="${context.pagedUsage.pageCount}"
+            value="${context.pagedUsage.page}"
+            data-cae-page-jump
+            aria-label="Activity page"
+          />
+          <span>of ${fmtCount(context.pagedUsage.pageCount)}</span>
+        </label>
         <button class="cae-page-button" data-cae-page="${context.pagedUsage.page + 1}" ${context.pagedUsage.page >= context.pagedUsage.pageCount ? "disabled" : ""}>›</button>
+        <button class="cae-page-button is-wide" data-cae-page="${context.pagedUsage.pageCount}" ${context.pagedUsage.page >= context.pagedUsage.pageCount ? "disabled" : ""}>Last</button>
       </div>
     </div>
   `;
