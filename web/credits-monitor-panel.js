@@ -1,7 +1,6 @@
 import {
   aggregateModels,
   aggregateProviders,
-  buildBalanceTimeline,
   buildLineTimeline,
   buildStackedTimeline,
   filterUsageEvents,
@@ -81,7 +80,6 @@ function buildContext() {
     providerSummary: aggregateProviders(providerEvents, 6),
     modelLeaderboard,
     snapshots: summariesByWindow(),
-    balanceTimeline: buildBalanceTimeline(),
     pagedUsage: paginateEvents(scopedEvents, state.ledgerPage),
     recentBilling: paginateEvents(state.events, 1, 6)
   };
@@ -149,8 +147,7 @@ function filtersMarkup(context) {
   const sectionButtons = [
     ["overview", "Overview"],
     ["models", "Models"],
-    ["activity", "Activity"],
-    ["balance", "Balance"]
+    ["activity", "Activity"]
   ]
     .map(
       ([key, label]) => `
@@ -365,58 +362,9 @@ function activityMarkup(context) {
   `;
 }
 
-function balanceMarkup(context) {
-  const values = context.balanceTimeline.map((point) => point.value);
-  const current = state.balance?.credits ?? 0;
-  const low = values.length ? Math.min(...values) : current;
-  const high = values.length ? Math.max(...values) : current;
-  const first = values.length ? values[0] : current;
-  const delta = current - first;
-  return `
-    <section class="cae-section-grid">
-      <div class="cae-shell-card cae-card-span-3">
-        <div class="cae-card-head">
-          <div>
-            <h3>Estimated credit balance</h3>
-            <p>Reconstructed from current balance, top-ups, and usage charges over ${esc(windowLabel(state.selectedWindow).toLowerCase())}.</p>
-          </div>
-          <div class="cae-inline-note">${esc(state.lastUpdated ? `Updated ${fmtDateFull(state.lastUpdated)}` : "Waiting for sync")}</div>
-        </div>
-        ${renderLineChart({
-          points: context.balanceTimeline,
-          valueFormatter: (value) => fmtCredits(value),
-          emptyMessage: "No balance history in this window.",
-          label: "Estimated balance"
-        })}
-      </div>
-      <div class="cae-shell-card cae-card-span-3">
-        <div class="cae-metric-strip">
-          <div class="cae-metric-card">
-            <span>Current balance</span>
-            <strong>${fmtCredits(current)}</strong>
-          </div>
-          <div class="cae-metric-card">
-            <span>Window low</span>
-            <strong>${fmtCredits(low)}</strong>
-          </div>
-          <div class="cae-metric-card">
-            <span>Window high</span>
-            <strong>${fmtCredits(high)}</strong>
-          </div>
-          <div class="cae-metric-card">
-            <span>Window delta</span>
-            <strong class="${delta >= 0 ? "cae-positive" : "cae-negative"}">${delta >= 0 ? "+" : ""}${fmtCredits(delta)}</strong>
-          </div>
-        </div>
-      </div>
-    </section>
-  `;
-}
-
 function sectionMarkup(context) {
   if (state.selectedSection === "models") return modelExplorerMarkup(context);
   if (state.selectedSection === "activity") return activityMarkup(context);
-  if (state.selectedSection === "balance") return balanceMarkup(context);
   return overviewMarkup(context);
 }
 

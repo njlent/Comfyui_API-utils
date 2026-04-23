@@ -1,4 +1,4 @@
-import { fmtDate, state } from "./credits-monitor-store.js";
+import { state } from "./credits-monitor-store.js";
 
 const LEDGER_PAGE_SIZE = 8;
 const WINDOW_LABELS = {
@@ -9,17 +9,6 @@ const WINDOW_LABELS = {
   all: "All time"
 };
 
-function windowCutoff(windowKey = state.selectedWindow) {
-  const windows = {
-    "1h": 60 * 60 * 1000,
-    "24h": 24 * 60 * 60 * 1000,
-    "7d": 7 * 24 * 60 * 60 * 1000,
-    "30d": 30 * 24 * 60 * 60 * 1000,
-    custom: state.customWindowDays * 24 * 60 * 60 * 1000
-  };
-  return windows[windowKey] ? Date.now() - windows[windowKey] : null;
-}
-
 export function describeEvent(event) {
   if (event.type === "credit_added") return "Credits added";
   if (event.type === "account_created") return "Account created";
@@ -28,8 +17,16 @@ export function describeEvent(event) {
 }
 
 function scopedUsageEvents(windowKey = state.selectedWindow) {
-  const cutoff = windowCutoff(windowKey);
-  if (!cutoff) return [...state.usageEvents];
+  const now = Date.now();
+  const windows = {
+    "1h": 60 * 60 * 1000,
+    "24h": 24 * 60 * 60 * 1000,
+    "7d": 7 * 24 * 60 * 60 * 1000,
+    "30d": 30 * 24 * 60 * 60 * 1000,
+    custom: state.customWindowDays * 24 * 60 * 60 * 1000
+  };
+  if (!windows[windowKey]) return [...state.usageEvents];
+  const cutoff = now - windows[windowKey];
   return state.usageEvents.filter((event) => event.date.getTime() >= cutoff);
 }
 
@@ -272,46 +269,6 @@ export function buildLineTimeline(events, { windowKey = state.selectedWindow } =
     count: bin.count,
     start: bin.start
   }));
-}
-
-function eventBalanceImpact(event) {
-  if (event.type === "credit_added") return event.credits;
-  if (event.type === "account_created") return 0;
-  return -event.credits;
-}
-
-export function buildBalanceTimeline({
-  events = state.events,
-  currentBalance = state.balance?.credits ?? 0,
-  windowKey = state.selectedWindow
-} = {}) {
-  const chronologicalEvents = [...events].sort((a, b) => a.date.getTime() - b.date.getTime());
-  let balance = currentBalance;
-  [...chronologicalEvents].reverse().forEach((event) => {
-    balance -= eventBalanceImpact(event);
-  });
-
-  const points = chronologicalEvents.map((event) => {
-    balance += eventBalanceImpact(event);
-    return {
-      label: fmtDate(event.createdAt),
-      value: Math.max(balance, 0),
-      start: event.date.getTime(),
-      event
-    };
-  });
-
-  if (state.lastUpdated) {
-    points.push({
-      label: "Now",
-      value: currentBalance,
-      start: state.lastUpdated.getTime(),
-      event: null
-    });
-  }
-
-  const cutoff = windowCutoff(windowKey);
-  return cutoff ? points.filter((point) => point.start >= cutoff) : points;
 }
 
 export function paginateEvents(events, page = state.ledgerPage, pageSize = LEDGER_PAGE_SIZE) {
