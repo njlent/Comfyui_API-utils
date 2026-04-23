@@ -1,9 +1,12 @@
 import { app } from "../../scripts/app.js";
+import {
+  showApiNodeUsdBadge,
+  subscribeSettings
+} from "./credits-monitor-settings.js";
 
 const CREDITS_PER_USD = 211;
 const USD_BADGE_BG = "#1A4A3A";
 const USD_BADGE_FG = "#FFFFFF";
-const USD_BADGE_GAP = 4;
 const USD_BADGE_MARKER = "__caeUsdBadge";
 const CREDIT_WORD_RE = /\s*credits?/i;
 const NUMBER_RE = /-?\d[\d.,]*/g;
@@ -90,6 +93,7 @@ function resolveCreditBadge(node, selfBadgeFn) {
 
 function createUsdBadge(node, selfBadgeFn) {
   try {
+    if (!showApiNodeUsdBadge()) return null;
     const creditBadge = resolveCreditBadge(node, selfBadgeFn);
     if (!creditBadge?.text) return null;
 
@@ -107,6 +111,14 @@ function createUsdBadge(node, selfBadgeFn) {
     return null;
   }
 }
+
+function redrawCanvas() {
+  app.canvas?.setDirty?.(true, true);
+}
+
+subscribeSettings(() => {
+  redrawCanvas();
+});
 
 function attachUsdBadge(node, nodeData) {
   if (!nodeData?.api_node || !nodeData?.price_badge || !Array.isArray(node.badges)) return;

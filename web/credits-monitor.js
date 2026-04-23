@@ -22,6 +22,10 @@ import {
   creditsIconMarkup,
   esc
 } from "./credits-monitor-ui-fragments.js";
+import {
+  showCreditsWidgetRefreshButton,
+  subscribeSettings
+} from "./credits-monitor-settings.js";
 
 const EXTENSION_CSS_URL = new URL("./credits-monitor.css", import.meta.url).toString();
 
@@ -37,6 +41,7 @@ function topbarMarkup() {
   const balance = state.balance;
   const authed = hasCloudAuth();
   const status = topbarStatus();
+  const showRefresh = showCreditsWidgetRefreshButton();
   const primary = authed
     ? balance
       ? `${fmtCredits(balance.credits)} Credits`
@@ -57,9 +62,11 @@ function topbarMarkup() {
         <div class="cae-topbar-secondary">${esc(secondary)}</div>
       </div>
       <div class="cae-topbar-actions">
-        <button class="cae-button cae-button-icon" data-cae-action="refresh" title="Sync credits" aria-label="Sync credits">
-          <i class="mdi mdi-refresh"></i>
-        </button>
+        ${showRefresh ? `
+          <button class="cae-button cae-button-icon" data-cae-action="refresh" title="Sync credits" aria-label="Sync credits">
+            <i class="mdi mdi-refresh"></i>
+          </button>
+        ` : ""}
         <button
           class="cae-button cae-button-icon"
           data-cae-action="${authed ? "open" : "signin"}"
@@ -158,6 +165,9 @@ app.registerExtension({
       subscribe(() => {
         ensureTopbar();
         renderPanel();
+      });
+      subscribeSettings(() => {
+        ensureTopbar();
       });
       startAutoRefresh();
     }
