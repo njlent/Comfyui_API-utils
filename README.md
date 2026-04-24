@@ -2,7 +2,7 @@
 
  <h1> <img src="docs/icon.webp" width="100px">
  <br/>
- ComfyUI API-Utils</h1>
+ Comfyui API-utils</h1>
 
  <img src="https://img.shields.io/badge/ComfyUI Customnode-1528c7"/> 
  

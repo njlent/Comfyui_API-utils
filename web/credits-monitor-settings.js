@@ -1,5 +1,7 @@
 import { app } from "../../scripts/app.js";
 
+const SETTINGS_CATEGORY = "Comfyui_API-utils";
+
 export const SETTING_IDS = {
   showCreditsWidget: "Comfy.ApiUtils.ShowCreditsWidget",
   showApiNodeUsdBadge: "Comfy.ApiUtils.ShowApiNodeUsdBadge",
@@ -96,14 +98,14 @@ export function registerSettings() {
     id: SETTING_IDS.creditsWidgetReserveCredits,
     name: "Credits widget reserve credits",
     valueKey: "creditsWidgetReserveCredits",
-    category: ["ComfyUI_API-utils", "Credits Widget", "10-reserve-credits"],
+    category: [SETTINGS_CATEGORY, "Credits Widget", "10-reserve-credits"],
     type: "number"
   });
   registerSetting({
     id: SETTING_IDS.creditsWidgetBurnRateUnit,
     name: "Credits widget burn-rate display unit",
     valueKey: "creditsWidgetBurnRateUnit",
-    category: ["ComfyUI_API-utils", "Credits Widget", "20-burn-rate-display-unit"],
+    category: [SETTINGS_CATEGORY, "Credits Widget", "20-burn-rate-display-unit"],
     type: "combo",
     options: ["hour", "day", "week"]
   });
@@ -111,7 +113,7 @@ export function registerSettings() {
     id: SETTING_IDS.creditsWidgetBurnRateRangeUnit,
     name: "Credits widget burn-rate range unit",
     valueKey: "creditsWidgetBurnRateRangeUnit",
-    category: ["ComfyUI_API-utils", "Credits Widget", "30-burn-rate-range-unit"],
+    category: [SETTINGS_CATEGORY, "Credits Widget", "30-burn-rate-range-unit"],
     type: "combo",
     options: ["hours", "days", "weeks"]
   });
@@ -119,14 +121,14 @@ export function registerSettings() {
     id: SETTING_IDS.creditsWidgetBurnRateRange,
     name: "Credits widget burn-rate range",
     valueKey: "creditsWidgetBurnRateRange",
-    category: ["ComfyUI_API-utils", "Credits Widget", "40-burn-rate-range"],
+    category: [SETTINGS_CATEGORY, "Credits Widget", "40-burn-rate-range"],
     type: "number"
   });
   registerSetting({
     id: SETTING_IDS.creditsWidgetHoverSubline,
     name: "Credits widget hover subline",
     valueKey: "creditsWidgetHoverSubline",
-    category: ["ComfyUI_API-utils", "Credits Widget", "50-hover-subline"],
+    category: [SETTINGS_CATEGORY, "Credits Widget", "50-hover-subline"],
     type: "combo",
     options: ["dollar", "burn-rate", "top-up"]
   });
@@ -134,7 +136,7 @@ export function registerSettings() {
     id: SETTING_IDS.creditsWidgetPrimarySubline,
     name: "Credits widget subline",
     valueKey: "creditsWidgetPrimarySubline",
-    category: ["ComfyUI_API-utils", "Credits Widget", "60-subline"],
+    category: [SETTINGS_CATEGORY, "Credits Widget", "60-subline"],
     type: "combo",
     options: ["dollar", "burn-rate", "top-up"]
   });
@@ -142,25 +144,25 @@ export function registerSettings() {
     SETTING_IDS.showCreditsWidgetRefreshButton,
     "Show refresh button in credits widget",
     "showCreditsWidgetRefreshButton",
-    ["ComfyUI_API-utils", "Credits Widget", "70-show-refresh-button"]
+    [SETTINGS_CATEGORY, "Credits Widget", "70-show-refresh-button"]
   );
   registerBooleanSetting(
     SETTING_IDS.showCreditsWidget,
     "Enable credits widget",
     "showCreditsWidget",
-    ["ComfyUI_API-utils", "Credits Widget", "80-enable-widget"]
+    [SETTINGS_CATEGORY, "Credits Widget", "80-enable-widget"]
   );
   registerBooleanSetting(
     SETTING_IDS.showApiNodeUsdBadge,
     "Toggle estimated $ price for API nodes",
     "showApiNodeUsdBadge",
-    ["ComfyUI_API-utils", "API Nodes", "show-estimated-usd-price"]
+    [SETTINGS_CATEGORY, "API Nodes", "show-estimated-usd-price"]
   );
   registerBooleanSetting(
     SETTING_IDS.showRunCostEstimate,
     "Show run button cost estimate",
     "showRunCostEstimate",
-    ["ComfyUI_API-utils", "Run Button", "show-cost-estimate"]
+    [SETTINGS_CATEGORY, "Run Button", "show-cost-estimate"]
   );
 }
 
