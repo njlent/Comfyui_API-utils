@@ -7,6 +7,7 @@ import {
   usageEventsInWindow, windowLabel
 } from "./credits-monitor-data.js";
 import { renderDonutChart, renderStackedBarChart } from "./credits-monitor-charts.js";
+import { burnMarkup, refreshBurnPreview } from "./credits-monitor-burn.js";
 import {
   exportMarkup, handleExportAction, refreshExportPreview, syncExportSelectionCount, updateExportPage
 } from "./credits-monitor-export.js";
@@ -114,6 +115,7 @@ function filtersMarkup(context) {
     ["overview", "Overview"],
     ["activity", "Activity"],
     ["topups", "Credits Added"],
+    ["burn", "Burn Rate"],
     ["export", "Export"]
   ]
     .map(
@@ -309,6 +311,7 @@ function topupsMarkup(context) {
 function sectionMarkup(context) {
   if (state.selectedSection === "activity") return activityMarkup(context);
   if (state.selectedSection === "topups") return topupsMarkup(context);
+  if (state.selectedSection === "burn") return burnMarkup(context);
   if (state.selectedSection === "export") return exportMarkup(context);
   return overviewMarkup(context);
 }
@@ -434,6 +437,7 @@ export function attachPanelEvents(container, onRefresh) {
     }
     if (event.target.dataset.caeSelect === "model") updateModelFilter(event.target.value);
     if (event.target.matches("[data-cae-export-dataset]")) refreshExportPreview(container);
+    if (event.target.matches("[data-cae-burn-range-unit], [data-cae-burn-rate-unit]")) refreshBurnPreview(container);
   });
 
   container.addEventListener("change", (event) => {
@@ -443,6 +447,7 @@ export function attachPanelEvents(container, onRefresh) {
     if (event.target.matches("[data-cae-export-days], [data-cae-export-scope]")) refreshExportPreview(container);
     if (event.target.matches("[data-cae-export-row]")) syncExportSelectionCount(container, event.target);
     if (event.target.matches("[data-cae-export-page]")) updateExportPage(container);
+    if (event.target.matches("[data-cae-burn-range], [data-cae-burn-reserve], [data-cae-burn-scope]")) refreshBurnPreview(container);
   });
 
   container.addEventListener("mousemove", (event) => {
