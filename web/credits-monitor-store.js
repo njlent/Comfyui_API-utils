@@ -444,9 +444,9 @@ export function updateCustomWindowDays(days) {
 }
 
 export function updateSection(section) {
-  state.selectedSection = section;
+  state.selectedSection = section === "activity" || section === "topups" ? section : "overview";
   state.ledgerPage = 1;
-  setStoredValue(SECTION_KEY, section);
+  setStoredValue(SECTION_KEY, state.selectedSection);
   setStoredValue(PAGE_KEY, state.ledgerPage);
   notify();
 }

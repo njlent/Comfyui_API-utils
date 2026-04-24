@@ -1,7 +1,6 @@
 import {
   aggregateModels,
   aggregateProviders,
-  buildLineTimeline,
   buildStackedTimeline,
   creditAddedEventsInWindow,
   filterUsageEvents,
@@ -61,15 +60,6 @@ function buildContext() {
     model: activeModel
   });
   const modelLeaderboard = aggregateModels(providerEvents, 8);
-  const focusModel = activeModel === "all" ? modelLeaderboard[0]?.model || "all" : activeModel;
-  const focusModelEvents =
-    focusModel === "all"
-      ? []
-      : filterUsageEvents({
-          windowKey: state.selectedWindow,
-          provider: activeProvider,
-          model: focusModel
-        });
   const topupEvents = creditAddedEventsInWindow();
   return {
     activeProvider,
@@ -78,8 +68,6 @@ function buildContext() {
     modelOptions,
     providerEvents,
     scopedEvents,
-    focusModel,
-    focusModelEvents,
     usageSummary: summarize(scopedEvents),
     providerSummary: aggregateProviders(providerEvents, 6),
     modelLeaderboard,
@@ -152,7 +140,6 @@ function filtersMarkup(context) {
     .join("");
   const sectionButtons = [
     ["overview", "Overview"],
-    ["models", "Models"],
     ["activity", "Activity"],
     ["topups", "Credits Added"]
   ]
@@ -277,71 +264,6 @@ function overviewMarkup(context) {
   `;
 }
 
-function modelExplorerMarkup(context) {
-  const focusModelSummary = summarize(context.focusModelEvents);
-  const lineData = buildLineTimeline(context.focusModelEvents, {
-    windowKey: state.selectedWindow
-  });
-  const modelShare = context.modelLeaderboard.slice(0, 6).map((item) => ({
-    key: `${item.provider}|||${item.model}`,
-    label: item.model,
-    value: item.credits,
-    total: item.credits
-  }));
-  return `
-    <section class="cae-section-grid">
-      <div class="cae-shell-card cae-card-span-2">
-        <div class="cae-card-head">
-          <div>
-            <h3>Model usage over time</h3>
-            <p>${context.activeModel === "all" ? "Auto-focused on the top model in this scope." : "Tracking the selected model only."}</p>
-          </div>
-          <div class="cae-inline-note">${esc(context.focusModel === "all" ? "No model selected" : context.focusModel)}</div>
-        </div>
-        ${renderLineChart({
-          points: lineData,
-          valueFormatter: (value) => fmtCredits(value),
-          label: context.focusModel,
-          compactXAxis: state.selectedWindow === "30d" || state.selectedWindow === "custom"
-        })}
-      </div>
-      <div class="cae-shell-card">
-        <div class="cae-card-head">
-          <div>
-            <h3>Model share</h3>
-            <p>Top models by credits in the active provider scope.</p>
-          </div>
-        </div>
-        ${renderDonutChart({
-          items: modelShare,
-          valueFormatter: (value) => fmtCredits(value),
-          emptyMessage: "No model share to show."
-        })}
-      </div>
-      <div class="cae-shell-card cae-card-span-3">
-        <div class="cae-metric-strip">
-          <div class="cae-metric-card">
-            <span>Focused model</span>
-            <strong title="${esc(context.focusModel)}">${esc(context.focusModel === "all" ? "None" : context.focusModel)}</strong>
-          </div>
-          <div class="cae-metric-card">
-            <span>Credits</span>
-            <strong>${fmtCredits(focusModelSummary.totalCredits)}</strong>
-          </div>
-          <div class="cae-metric-card">
-            <span>Runs</span>
-            <strong>${fmtCount(focusModelSummary.runCount)}</strong>
-          </div>
-          <div class="cae-metric-card">
-            <span>Average / run</span>
-            <strong>${fmtCredits(focusModelSummary.avgCredits)}</strong>
-          </div>
-        </div>
-      </div>
-    </section>
-  `;
-}
-
 function activityMarkup(context) {
   return `
     <section class="cae-section-grid">
@@ -409,7 +331,6 @@ function topupsMarkup(context) {
 }
 
 function sectionMarkup(context) {
-  if (state.selectedSection === "models") return modelExplorerMarkup(context);
   if (state.selectedSection === "activity") return activityMarkup(context);
   if (state.selectedSection === "topups") return topupsMarkup(context);
   return overviewMarkup(context);
