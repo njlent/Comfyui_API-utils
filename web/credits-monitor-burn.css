@@ -6,6 +6,38 @@
   margin-bottom: 16px;
 }
 
+.cae-snapshot-grid-with-burn {
+  grid-template-columns: minmax(220px, 1.25fr) repeat(2, minmax(160px, 1fr));
+}
+
+.cae-burn-summary-card {
+  border-color: color-mix(in srgb, var(--cae-gold) 50%, var(--cae-line));
+  background:
+    linear-gradient(135deg, color-mix(in srgb, var(--cae-gold) 25%, transparent), transparent 48%),
+    color-mix(in srgb, var(--cae-panel-soft) 88%, transparent);
+}
+
+.cae-burn-summary-card strong {
+  font-size: 20px;
+}
+
+.cae-burn-summary-card small {
+  min-width: 0;
+  color: var(--cae-muted);
+  font-size: 12px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.cae-snapshot-grid-with-burn .cae-snapshot-card-runs {
+  grid-column: 2;
+}
+
+.cae-snapshot-grid-with-burn .cae-snapshot-card-spend {
+  grid-column: 3;
+}
+
 .cae-burn-control {
   display: flex;
   flex-direction: column;
@@ -162,7 +194,13 @@
   }
 
   .cae-burn-grid,
-  .cae-burn-metrics {
+  .cae-burn-metrics,
+  .cae-snapshot-grid-with-burn {
     grid-template-columns: 1fr;
+  }
+
+  .cae-snapshot-grid-with-burn .cae-snapshot-card-runs,
+  .cae-snapshot-grid-with-burn .cae-snapshot-card-spend {
+    grid-column: auto;
   }
 }

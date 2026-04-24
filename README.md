@@ -14,8 +14,7 @@ Enhanced Comfy-Credits analytics, display, CSV export, aswell as USD conversion/
 
 > [!IMPORTANT]
 > Credit and USD numbers are estimates, not official billing records.
-
-Some Comfy API billing events do not expose raw credit values in a directly readable form. For those events this extension estimates credits from current or known price tables and token/count/duration metadata. These numbers are not completely exact and can deviate by around 10% for some nodes.
+>Some Comfy API billing events do not expose raw credit values in a directly readable form. For those events this extension estimates credits from current or known price tables and token/count/duration metadata. These numbers are not completely exact and can deviate by around 10% for some nodes.
 
 ## Features
 

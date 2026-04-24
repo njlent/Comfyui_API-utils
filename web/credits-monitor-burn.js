@@ -6,6 +6,7 @@ import {
   fmtUsd,
   state
 } from "./credits-monitor-data.js";
+import { currentSettings, updateSettings } from "./credits-monitor-settings.js";
 import { esc } from "./credits-monitor-ui-fragments.js";
 
 const HOUR_MS = 60 * 60 * 1000;
@@ -13,10 +14,6 @@ const DAY_MS = 24 * HOUR_MS;
 const WEEK_MS = 7 * DAY_MS;
 
 const burnState = {
-  rangeValue: 7,
-  rangeUnit: "days",
-  rateUnit: "day",
-  reserveCredits: 0,
   currentScope: true
 };
 
@@ -26,12 +23,12 @@ function num(value, fallback = 0) {
 }
 
 function clampRange(value) {
-  const parsed = Math.floor(num(value, burnState.rangeValue));
+  const parsed = Math.floor(num(value, currentSettings().creditsWidgetBurnRateRange));
   return Math.min(Math.max(parsed, 1), 3650);
 }
 
 function clampReserve(value) {
-  return Math.max(0, num(value, burnState.reserveCredits));
+  return Math.max(0, num(value, currentSettings().creditsWidgetReserveCredits));
 }
 
 function unitMs(unit) {
@@ -57,7 +54,23 @@ function configFrom(root) {
 }
 
 function syncState(config) {
-  Object.assign(burnState, config);
+  burnState.currentScope = config.currentScope;
+  updateSettings({
+    creditsWidgetBurnRateRange: config.rangeValue,
+    creditsWidgetBurnRateRangeUnit: config.rangeUnit,
+    creditsWidgetBurnRateUnit: config.rateUnit,
+    creditsWidgetReserveCredits: config.reserveCredits
+  });
+}
+
+export function burnConfigFromSettings(settings = currentSettings(), currentScope = false) {
+  return {
+    rangeValue: settings.creditsWidgetBurnRateRange,
+    rangeUnit: settings.creditsWidgetBurnRateRangeUnit,
+    rateUnit: settings.creditsWidgetBurnRateUnit,
+    reserveCredits: settings.creditsWidgetReserveCredits,
+    currentScope
+  };
 }
 
 function rangeLabel(config) {
@@ -195,7 +208,7 @@ function burnBody(config) {
 }
 
 export function burnMarkup() {
-  const config = { ...burnState };
+  const config = burnConfigFromSettings(currentSettings(), burnState.currentScope);
   return `
     <section class="cae-section-grid">
       <div class="cae-shell-card cae-card-span-3" data-cae-burn-root>

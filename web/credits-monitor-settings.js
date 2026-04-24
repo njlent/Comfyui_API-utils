@@ -4,6 +4,7 @@ export const SETTING_IDS = {
   showCreditsWidget: "Comfy.ApiUtils.ShowCreditsWidget",
   showApiNodeUsdBadge: "Comfy.ApiUtils.ShowApiNodeUsdBadge",
   showCreditsWidgetRefreshButton: "Comfy.ApiUtils.ShowCreditsWidgetRefreshButton",
+  showCreditsWidgetDollarValue: "Comfy.ApiUtils.ShowCreditsWidgetDollarValue",
   showCreditsWidgetBurnRate: "Comfy.ApiUtils.ShowCreditsWidgetBurnRate",
   creditsWidgetBurnRateRange: "Comfy.ApiUtils.CreditsWidgetBurnRateRange",
   creditsWidgetBurnRateRangeUnit: "Comfy.ApiUtils.CreditsWidgetBurnRateRangeUnit",
@@ -16,6 +17,7 @@ const defaults = {
   showCreditsWidget: true,
   showApiNodeUsdBadge: true,
   showCreditsWidgetRefreshButton: false,
+  showCreditsWidgetDollarValue: true,
   showCreditsWidgetBurnRate: false,
   creditsWidgetBurnRateRange: 7,
   creditsWidgetBurnRateRangeUnit: "days",
@@ -37,6 +39,7 @@ function normalizeValue(valueKey, value) {
     valueKey === "showCreditsWidget" ||
     valueKey === "showApiNodeUsdBadge" ||
     valueKey === "showCreditsWidgetRefreshButton" ||
+    valueKey === "showCreditsWidgetDollarValue" ||
     valueKey === "showCreditsWidgetBurnRate" ||
     valueKey === "showCreditsWidgetTopUpEta"
   ) {
@@ -86,19 +89,19 @@ export function registerSettings() {
     SETTING_IDS.showCreditsWidget,
     "Enable credits widget",
     "showCreditsWidget",
-    ["ComfyUI_API-utils", "Credits Widget", "enabled"]
-  );
-  registerBooleanSetting(
-    SETTING_IDS.showApiNodeUsdBadge,
-    "Toggle estimated $ price for API nodes",
-    "showApiNodeUsdBadge",
-    ["ComfyUI_API-utils", "API Nodes", "show-estimated-usd-price"]
+    ["ComfyUI_API-utils", "Credits Widget", "00-enable-widget"]
   );
   registerBooleanSetting(
     SETTING_IDS.showCreditsWidgetRefreshButton,
     "Show refresh button in credits widget",
     "showCreditsWidgetRefreshButton",
     ["ComfyUI_API-utils", "Credits Widget", "show-refresh-button"]
+  );
+  registerBooleanSetting(
+    SETTING_IDS.showCreditsWidgetDollarValue,
+    "Show $ value in credits widget",
+    "showCreditsWidgetDollarValue",
+    ["ComfyUI_API-utils", "Credits Widget", "show-dollar-value"]
   );
   registerBooleanSetting(
     SETTING_IDS.showCreditsWidgetBurnRate,
@@ -142,6 +145,12 @@ export function registerSettings() {
     category: ["ComfyUI_API-utils", "Credits Widget", "reserve-credits"],
     type: "number"
   });
+  registerBooleanSetting(
+    SETTING_IDS.showApiNodeUsdBadge,
+    "Toggle estimated $ price for API nodes",
+    "showApiNodeUsdBadge",
+    ["ComfyUI_API-utils", "API Nodes", "show-estimated-usd-price"]
+  );
 }
 
 export function subscribeSettings(listener) {
@@ -152,6 +161,19 @@ export function subscribeSettings(listener) {
 
 export function currentSettings() {
   return { ...values };
+}
+
+export function updateSettings(patch) {
+  let changed = false;
+  Object.entries(patch).forEach(([key, value]) => {
+    if (!(key in defaults)) return;
+    const normalized = normalizeValue(key, value);
+    if (values[key] === normalized) return;
+    values[key] = normalized;
+    changed = true;
+    app.ui.settings.setSettingValue?.(SETTING_IDS[key], normalized);
+  });
+  if (changed) notifySettingsChanged();
 }
 
 export function showCreditsWidget() {

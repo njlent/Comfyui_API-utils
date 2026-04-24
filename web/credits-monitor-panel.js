@@ -7,10 +7,14 @@ import {
   usageEventsInWindow, windowLabel
 } from "./credits-monitor-data.js";
 import { renderDonutChart, renderStackedBarChart } from "./credits-monitor-charts.js";
-import { burnMarkup, refreshBurnPreview } from "./credits-monitor-burn.js";
+import {
+  burnConfigFromSettings, burnMarkup, formatBurnDuration, formatBurnTopUpDate,
+  refreshBurnPreview, summarizeBurn
+} from "./credits-monitor-burn.js";
 import {
   exportMarkup, handleExportAction, refreshExportPreview, syncExportSelectionCount, updateExportPage
 } from "./credits-monitor-export.js";
+import { currentSettings } from "./credits-monitor-settings.js";
 import {
   billingLedgerMarkup, creditsIconMarkup, esc, modelRowsMarkup, selectMarkup,
   snapshotCardsMarkup, topUpTableMarkup, usageTableMarkup
@@ -56,6 +60,10 @@ function headerMarkup(context) {
   const balance = state.balance;
   const topModel = context.usageSummary.topModel?.name || "No usage yet";
   const updated = state.lastUpdated ? fmtDateFull(state.lastUpdated) : "Waiting for first sync";
+  const burnConfig = burnConfigFromSettings(currentSettings());
+  const burnSummary = summarizeBurn(burnConfig);
+  const burnEta = formatBurnTopUpDate(burnSummary.hoursToReserve);
+  const burnRunway = formatBurnDuration(burnSummary.hoursToReserve);
   return `
     <section class="cae-shell-card cae-header-card">
       <div class="cae-header-main">
@@ -78,7 +86,12 @@ function headerMarkup(context) {
           </div>
           <div class="cae-balance-meta">Last updated: ${esc(updated)}</div>
         </div>
-        <div class="cae-snapshot-grid">
+        <div class="cae-snapshot-grid cae-snapshot-grid-with-burn">
+          <div class="cae-snapshot-card cae-burn-summary-card" data-cae-header-burn>
+            <span class="cae-snapshot-label">Top-up estimate</span>
+            <strong title="${esc(burnEta)}">${esc(burnEta)}</strong>
+            <small>${esc(`${fmtCredits(burnSummary.rateCredits)} credits/${burnConfig.rateUnit} - ${burnRunway} until ${fmtCredits(burnConfig.reserveCredits)} reserve`)}</small>
+          </div>
           <div class="cae-snapshot-card">
             <span class="cae-snapshot-label">Window</span>
             <strong>${esc(windowLabel(state.selectedWindow))}</strong>
@@ -87,11 +100,11 @@ function headerMarkup(context) {
             <span class="cae-snapshot-label">Top model</span>
             <strong title="${esc(topModel)}">${esc(topModel)}</strong>
           </div>
-          <div class="cae-snapshot-card">
+          <div class="cae-snapshot-card cae-snapshot-card-runs">
             <span class="cae-snapshot-label">Runs</span>
             <strong>${fmtCount(context.usageSummary.runCount)}</strong>
           </div>
-          <div class="cae-snapshot-card">
+          <div class="cae-snapshot-card cae-snapshot-card-spend">
             <span class="cae-snapshot-label">Spend</span>
             <strong>${fmtUsd(context.usageSummary.totalUsd)}</strong>
           </div>

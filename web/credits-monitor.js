@@ -15,6 +15,7 @@ import {
   topbarStatus
 } from "./credits-monitor-data.js";
 import {
+  burnConfigFromSettings,
   formatBurnDuration,
   formatBurnTopUpDate,
   summarizeBurn
@@ -43,19 +44,9 @@ function ensureStyles() {
   document.head.appendChild(link);
 }
 
-function widgetBurnConfig(settings) {
-  return {
-    rangeValue: settings.creditsWidgetBurnRateRange,
-    rangeUnit: settings.creditsWidgetBurnRateRangeUnit,
-    rateUnit: settings.creditsWidgetBurnRateUnit,
-    reserveCredits: settings.creditsWidgetReserveCredits,
-    currentScope: false
-  };
-}
-
 function topbarBurnLines(settings) {
   if (!hasCloudAuth() || (!settings.showCreditsWidgetBurnRate && !settings.showCreditsWidgetTopUpEta)) return "";
-  const summary = summarizeBurn(widgetBurnConfig(settings));
+  const summary = summarizeBurn(burnConfigFromSettings(settings));
   const lines = [];
   if (settings.showCreditsWidgetBurnRate) {
     lines.push(`Burn rate ${fmtCredits(summary.rateCredits)} credits/${settings.creditsWidgetBurnRateUnit}`);
@@ -80,7 +71,9 @@ function topbarMarkup(settings = currentSettings()) {
     : "Comfy sign-in required";
   const secondary = authed
     ? balance
-      ? `${fmtUsd(balance.usd)} value`
+      ? settings.showCreditsWidgetDollarValue
+        ? `${fmtUsd(balance.usd)} value`
+        : ""
       : "No balance loaded"
     : "Settings > User";
   return `
@@ -90,7 +83,7 @@ function topbarMarkup(settings = currentSettings()) {
           ${creditsIconMarkup(15)}
           <span>${esc(primary)}</span>
         </div>
-        <div class="cae-topbar-secondary">${esc(secondary)}</div>
+        ${secondary ? `<div class="cae-topbar-secondary">${esc(secondary)}</div>` : ""}
         ${topbarBurnLines(settings)}
       </div>
       <div class="cae-topbar-actions">
@@ -204,6 +197,7 @@ app.registerExtension({
       });
       subscribeSettings((settings) => {
         ensureTopbar(0, settings);
+        renderPanel();
       });
       startAutoRefresh();
     }
