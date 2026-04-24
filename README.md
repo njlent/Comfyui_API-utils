@@ -1,6 +1,7 @@
 <div align="center">
 
  <h1> <img src="docs/icon.webp" width="100px">
+
  <br/>
  Comfyui API-utils</h1>
 
@@ -35,6 +36,9 @@ Enhanced Comfy-Credits analytics, display, CSV export, aswell as USD conversion/
   - widget refresh button
   - burn rate widget
 - No extra Python dependencies needed.
+
+## UI screenshot
+<h1> <img src="docs/ui.jpg">
 
 ## Pricing Estimates
 
