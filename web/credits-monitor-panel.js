@@ -223,7 +223,8 @@ function overviewMarkup(context) {
           series: stacked.series,
           valueFormatter: (value) => fmtCredits(value),
           tooltipFormatter: (bin, segment) => `${segment.label} - ${bin.label}: ${fmtCredits(segment.value)} credits`,
-          emptyMessage: `No ${stackedGroup} usage in this scope.`
+          emptyMessage: `No ${stackedGroup} usage in this scope.`,
+          splitXAxisLabels: ["1h", "7d"].includes(state.selectedWindow)
         })}
       </div>
       <div class="cae-shell-card">

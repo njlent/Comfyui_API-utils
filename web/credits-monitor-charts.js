@@ -70,12 +70,13 @@ export function renderStackedBarChart({
   series,
   valueFormatter,
   tooltipFormatter,
-  emptyMessage = "No chart data."
+  emptyMessage = "No chart data.",
+  splitXAxisLabels = false
 }) {
   if (!bins.length || !series.length) return emptyState(emptyMessage);
   const width = 720;
   const height = 280;
-  const padding = { top: 18, right: 12, bottom: 42, left: 40 };
+  const padding = { top: 18, right: 12, bottom: splitXAxisLabels ? 58 : 42, left: 40 };
   const chartWidth = width - padding.left - padding.right;
   const chartHeight = height - padding.top - padding.bottom;
   const maxTotal = Math.max(...bins.map((bin) => bin.total || 0), 1);
@@ -141,13 +142,25 @@ export function renderStackedBarChart({
       `;
     })
     .join("");
+  const xLabels = splitXAxisLabels
+    ? bins
+      .map((bin, index) => {
+        const x = padding.left + index * step + step / 2;
+        const y = height - 20;
+        const rotate = bins.length > 12;
+        return rotate
+          ? `<text x="${x}" y="${y}" text-anchor="end" transform="rotate(-45 ${x} ${y})" class="cae-chart-axis-text">${esc(bin.label)}</text>`
+          : `<text x="${x}" y="${height - 18}" text-anchor="middle" class="cae-chart-axis-text">${esc(bin.label)}</text>`;
+      })
+      .join("")
+    : `<text x="${padding.left + chartWidth / 2}" y="${height - 16}" text-anchor="middle" class="cae-chart-axis-text">${esc(rangeLabel)}</text>`;
 
   return `
     <div class="cae-chart-block">
       <svg viewBox="0 0 ${width} ${height}" class="cae-chart-svg" role="img" aria-label="Stacked credits chart">
         ${grid}
         ${bars}
-        <text x="${padding.left + chartWidth / 2}" y="${height - 16}" text-anchor="middle" class="cae-chart-axis-text">${esc(rangeLabel)}</text>
+        ${xLabels}
       </svg>
       ${legendMarkup(series, paletteMap, valueFormatter)}
     </div>

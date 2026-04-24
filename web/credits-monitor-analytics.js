@@ -189,7 +189,7 @@ function binConfig(events, windowKey = state.selectedWindow) {
       start: now - days * 24 * 60 * 60 * 1000,
       count: days,
       sizeMs: 24 * 60 * 60 * 1000,
-      formatter: new Intl.DateTimeFormat(undefined, { month: "short", day: "numeric" })
+      formatter: new Intl.DateTimeFormat(undefined, { year: "numeric", month: "short", day: "numeric" })
     };
   }
   const oldest = Math.min(...events.map((event) => event.date.getTime()), now);
@@ -199,7 +199,7 @@ function binConfig(events, windowKey = state.selectedWindow) {
     start: now - sizeMs * count,
     count,
     sizeMs,
-    formatter: new Intl.DateTimeFormat(undefined, { month: "short", day: "numeric" })
+    formatter: new Intl.DateTimeFormat(undefined, { year: "numeric", month: "short", day: "numeric" })
   };
 }
 
