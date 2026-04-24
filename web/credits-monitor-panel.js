@@ -59,7 +59,7 @@ function buildContext() {
     provider: activeProvider,
     model: activeModel
   });
-  const modelLeaderboard = aggregateModels(providerEvents, 8);
+  const modelLeaderboard = aggregateModels(providerEvents, Infinity);
   const topupEvents = creditAddedEventsInWindow();
   return {
     activeProvider,
@@ -184,7 +184,7 @@ function filtersMarkup(context) {
 function overviewMarkup(context) {
   const stackedGroup = state.selectedStackedGroup === "model" ? "model" : "provider";
   const overviewEvents = context.scopedEvents;
-  const overviewLeaderboard = aggregateModels(overviewEvents, 8);
+  const overviewLeaderboard = aggregateModels(overviewEvents, Infinity);
   const overviewProviderSummary = aggregateProviders(overviewEvents, 6);
   const stacked = buildStackedTimeline(overviewEvents, {
     windowKey: state.selectedWindow,
@@ -245,8 +245,8 @@ function overviewMarkup(context) {
       <div class="cae-shell-card cae-card-span-2">
         <div class="cae-card-head">
           <div>
-            <h3>Top models</h3>
-            <p>Highest credit consumers in the current scope.</p>
+            <h3>Models</h3>
+            <p>All models with usage in the current scope.</p>
           </div>
         </div>
         ${modelRowsMarkup(overviewLeaderboard, context.usageSummary.totalCredits)}
