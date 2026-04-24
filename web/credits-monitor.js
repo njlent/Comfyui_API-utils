@@ -44,19 +44,25 @@ function ensureStyles() {
   document.head.appendChild(link);
 }
 
-function topbarBurnLines(settings) {
-  if (!hasCloudAuth() || (!settings.showCreditsWidgetBurnRate && !settings.showCreditsWidgetTopUpEta)) return "";
+function topbarSubline(kind, settings, balance, authed) {
+  if (!authed) return "Settings > User";
+  if (!balance) return "No balance loaded";
+  if (kind === "dollar") return `${fmtUsd(balance.usd)} value`;
   const summary = summarizeBurn(burnConfigFromSettings(settings));
-  const lines = [];
-  if (settings.showCreditsWidgetBurnRate) {
-    lines.push(`Burn rate ${fmtCredits(summary.rateCredits)} credits/${settings.creditsWidgetBurnRateUnit}`);
-  }
-  if (settings.showCreditsWidgetTopUpEta) {
+  if (kind === "burn-rate") return `${fmtCredits(summary.rateCredits)} credits/${settings.creditsWidgetBurnRateUnit}`;
+  if (kind === "top-up") {
     const eta = formatBurnTopUpDate(summary.hoursToReserve);
     const runway = formatBurnDuration(summary.hoursToReserve);
-    lines.push(Number.isFinite(summary.hoursToReserve) ? `Top-up ${eta} (${runway})` : "Top-up ETA unavailable");
+    return Number.isFinite(summary.hoursToReserve) ? `Top-up ${eta} (${runway})` : "Top-up ETA unavailable";
   }
-  return lines.map((line) => `<div class="cae-topbar-secondary">${esc(line)}</div>`).join("");
+  return `${fmtUsd(balance.usd)} value`;
+}
+
+function hoverSublineKind(settings) {
+  if (settings.creditsWidgetHoverSubline !== settings.creditsWidgetPrimarySubline) {
+    return settings.creditsWidgetHoverSubline;
+  }
+  return ["dollar", "burn-rate", "top-up"].find((kind) => kind !== settings.creditsWidgetPrimarySubline) || "burn-rate";
 }
 
 function topbarMarkup(settings = currentSettings()) {
@@ -69,13 +75,10 @@ function topbarMarkup(settings = currentSettings()) {
       ? `${fmtCredits(balance.credits)} Credits`
       : "Credits unavailable"
     : "Comfy sign-in required";
-  const secondary = authed
-    ? balance
-      ? settings.showCreditsWidgetDollarValue
-        ? `${fmtUsd(balance.usd)} value`
-        : ""
-      : "No balance loaded"
-    : "Settings > User";
+  const secondaryKind = settings.creditsWidgetPrimarySubline;
+  const hoverKind = hoverSublineKind(settings);
+  const secondary = topbarSubline(secondaryKind, settings, balance, authed);
+  const hoverSecondary = topbarSubline(hoverKind, settings, balance, authed);
   return `
     <div class="cae-topbar-card">
       <div class="cae-topbar-balance">
@@ -83,8 +86,12 @@ function topbarMarkup(settings = currentSettings()) {
           ${creditsIconMarkup(15)}
           <span>${esc(primary)}</span>
         </div>
-        ${secondary ? `<div class="cae-topbar-secondary">${esc(secondary)}</div>` : ""}
-        ${topbarBurnLines(settings)}
+        <div class="cae-topbar-subline" aria-label="${esc(`${secondary}; ${hoverSecondary}`)}">
+          <div class="cae-topbar-subline-track">
+            <div class="cae-topbar-secondary ${secondaryKind === "burn-rate" ? "is-burn" : ""}">${esc(secondary)}</div>
+            <div class="cae-topbar-secondary ${hoverKind === "burn-rate" ? "is-burn" : ""}">${esc(hoverSecondary)}</div>
+          </div>
+        </div>
       </div>
       <div class="cae-topbar-actions">
         ${showRefresh ? `

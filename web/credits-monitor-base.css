@@ -45,7 +45,6 @@
 .cae-topbar-balance {
   display: flex;
   flex-direction: column;
-  gap: 2px;
   min-width: 0;
 }
 
@@ -65,6 +64,38 @@
   line-height: 1.1;
   white-space: nowrap;
   padding-left: 22px;
+}
+
+.cae-topbar-subline {
+  height: 12px;
+  margin-top: 2px;
+  overflow: hidden;
+}
+
+.cae-topbar-subline-track {
+  display: flex;
+  flex-direction: column;
+  transform: translateY(0);
+  transition: transform 160ms ease;
+}
+
+.cae-topbar-card:hover .cae-topbar-subline-track {
+  transform: translateY(-12px);
+}
+
+.cae-topbar-subline .cae-topbar-secondary {
+  height: 12px;
+}
+
+.cae-topbar-secondary.is-burn::before {
+  content: "";
+  display: inline-block;
+  width: 9px;
+  height: 10px;
+  margin-right: 4px;
+  vertical-align: -1px;
+  background: currentColor;
+  clip-path: path("M4.8 0C5.4 1.7 7.7 2.7 7.7 5.3C7.7 8 5.8 10 3.8 10C1.6 10 0 8.4 0 6.2C0 4.7 0.8 3.6 1.7 2.7C1.7 3.9 2.4 4.7 3.2 5C3.2 3 4.2 1.8 4.8 0Z");
 }
 
 .cae-topbar-actions {

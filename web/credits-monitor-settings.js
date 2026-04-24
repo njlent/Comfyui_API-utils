@@ -6,6 +6,8 @@ export const SETTING_IDS = {
   showCreditsWidgetRefreshButton: "Comfy.ApiUtils.ShowCreditsWidgetRefreshButton",
   showCreditsWidgetDollarValue: "Comfy.ApiUtils.ShowCreditsWidgetDollarValue",
   showCreditsWidgetBurnRate: "Comfy.ApiUtils.ShowCreditsWidgetBurnRate",
+  creditsWidgetPrimarySubline: "Comfy.ApiUtils.CreditsWidgetPrimarySubline",
+  creditsWidgetHoverSubline: "Comfy.ApiUtils.CreditsWidgetHoverSubline",
   creditsWidgetBurnRateRange: "Comfy.ApiUtils.CreditsWidgetBurnRateRange",
   creditsWidgetBurnRateRangeUnit: "Comfy.ApiUtils.CreditsWidgetBurnRateRangeUnit",
   creditsWidgetBurnRateUnit: "Comfy.ApiUtils.CreditsWidgetBurnRateUnit",
@@ -19,6 +21,8 @@ const defaults = {
   showCreditsWidgetRefreshButton: false,
   showCreditsWidgetDollarValue: true,
   showCreditsWidgetBurnRate: false,
+  creditsWidgetPrimarySubline: "dollar",
+  creditsWidgetHoverSubline: "burn-rate",
   creditsWidgetBurnRateRange: 7,
   creditsWidgetBurnRateRangeUnit: "days",
   creditsWidgetBurnRateUnit: "day",
@@ -59,6 +63,9 @@ function normalizeValue(valueKey, value) {
   if (valueKey === "creditsWidgetBurnRateUnit") {
     return ["hour", "day", "week"].includes(value) ? value : defaults[valueKey];
   }
+  if (valueKey === "creditsWidgetPrimarySubline" || valueKey === "creditsWidgetHoverSubline") {
+    return ["dollar", "burn-rate", "top-up"].includes(value) ? value : defaults[valueKey];
+  }
   return value ?? defaults[valueKey];
 }
 
@@ -97,18 +104,22 @@ export function registerSettings() {
     "showCreditsWidgetRefreshButton",
     ["ComfyUI_API-utils", "Credits Widget", "show-refresh-button"]
   );
-  registerBooleanSetting(
-    SETTING_IDS.showCreditsWidgetDollarValue,
-    "Show $ value in credits widget",
-    "showCreditsWidgetDollarValue",
-    ["ComfyUI_API-utils", "Credits Widget", "show-dollar-value"]
-  );
-  registerBooleanSetting(
-    SETTING_IDS.showCreditsWidgetBurnRate,
-    "Show burn rate in credits widget",
-    "showCreditsWidgetBurnRate",
-    ["ComfyUI_API-utils", "Credits Widget", "show-burn-rate"]
-  );
+  registerSetting({
+    id: SETTING_IDS.creditsWidgetPrimarySubline,
+    name: "Credits widget subline",
+    valueKey: "creditsWidgetPrimarySubline",
+    category: ["ComfyUI_API-utils", "Credits Widget", "subline"],
+    type: "combo",
+    options: ["dollar", "burn-rate", "top-up"]
+  });
+  registerSetting({
+    id: SETTING_IDS.creditsWidgetHoverSubline,
+    name: "Credits widget hover subline",
+    valueKey: "creditsWidgetHoverSubline",
+    category: ["ComfyUI_API-utils", "Credits Widget", "hover-subline"],
+    type: "combo",
+    options: ["dollar", "burn-rate", "top-up"]
+  });
   registerSetting({
     id: SETTING_IDS.creditsWidgetBurnRateRange,
     name: "Credits widget burn-rate range",
