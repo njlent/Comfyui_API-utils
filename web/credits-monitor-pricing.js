@@ -1,129 +1,18 @@
-const XAI_CREDITS = {
-  imageGenerationRun: 6.96,
-  imageEditOutputRun: 6.96,
-  imageEditInputRun: 0.42,
-  videoGenerationOutputPerSecond: 38.19,
-  videoGenerationInputImagePerSecond: 0.42,
-  videoEditPerSecond: 40.3,
-  scaledRawDivisor: 100_000_000
-};
-
-const BFL_RUN_CREDITS = {
-  "flux-dev": 5.28, "flux-kontext-max": 16.88, "flux-kontext-pro": 8.44,
-  "flux-pro-1.0-canny": 10.55, "flux-pro-1.0-depth": 10.55, "flux-pro-1.0-expand": 10.55,
-  "flux-pro-1.0-fill": 10.55, "flux-pro-1.1": 8.44, "flux-pro-1.1-ultra": 12.66
-};
-
-const BYTEPLUS_IMAGE_RUN_CREDITS = {
-  "seededit-3-0-i2i": 6.33, "seedream-3-0-t2i": 6.33, "seedream-4-0": 6.33,
-  "seedream-4-5": 8.44, "seedream-5-0": 7.39
-};
-
-const MINIMAX_RUN_CREDITS = {
-  "i2v-01-director": 90.73, "i2v-01-live": 90.73, "i2v-01": 90.73,
-  "s2v-01": 137.15, "t2v-01-director": 90.73, "t2v-01": 90.73
-};
-
-const MINIMAX_HAILUO_02_RUN_CREDITS = { "10:768p": 118.16, "6:1080p": 103.39, "6:768p": 59.08 };
-
-const VEO_RUN_CREDITS = {
-  "veo-2.0-generate-001": { default: 105.5 },
-  "veo-3.0-generate-preview": { default: 158.25 },
-  "veo-3.0-fast-generate-001": { audio: 31.65, silent: 21.1, videoAudio: 253.2, videoSilent: 168.8 },
-  "veo-3.0-generate-001": { audio: 84.4, silent: 42.2, videoAudio: 675.2, videoSilent: 337.6 },
-  "veo-3.1-fast-generate-preview": { audio: 31.65, silent: 21.1 },
-  "veo-3.1-generate-preview": { audio: 84.4, silent: 42.2 }
-};
-
-const WAN_VIDEO_CREDITS_PER_SECOND = { "480p": 10.55, "720p": 21.1, "1080p": 31.65 };
-
-const FIXED_RUN_CREDITS = {
-  "byteplus:seedream-4-5-251128": 8.44,
-  "byteplus:seedream-5-0-260128": 7.39,
-  "stability:v2beta/stable-image/generate/core": 6.33,
-  "stability:v2beta/stable-image/generate/ultra": 16.88,
-  "stability:v2beta/stable-image/upscale/conservative": 84.4,
-  "stability:v2beta/stable-image/upscale/creative": 126.6,
-  "stability:v2beta/stable-image/upscale/fast": 4.22,
-  "wavespeed:seedvr2": 2.11,
-  "wavespeed:ultimate-image-upscaler": 12.66,
-  "wavespeed:flashvsr:720p": 12.66,
-  "wavespeed:flashvsr:1080p": 18.99,
-  "wavespeed:flashvsr:2k": 25.32,
-  "wavespeed:flashvsr:4k": 33.76,
-  "wavespeed:nano-banana-pro/edit:1k": 28.27,
-  "wavespeed:nano-banana-pro/edit:2k": 28.27,
-  "wavespeed:nano-banana-pro/edit:4k": 50.64,
-  "kling:pro:kling-v2-5-turbo": 73.85,
-  "kling:std:kling-v2-5-turbo": 73.85
-};
-
-const CLOUD_WORKFLOW_CREDIT_RATES = [
-  { before: "2026-01-24T00:00:00.000Z", creditsPerSecond: 0.39, defaultBillableSeconds: 1 },
-  { from: "2026-01-24T00:00:00.000Z", creditsPerSecond: 0.266, defaultBillableSeconds: 1 }
-];
-
-const MODEL_TOKEN_RATES = {
-  "openai:gpt-5": { input_text_tokens: 263.75, cached_input_text_tokens: 26.38, output_text_tokens: 2110 },
-  "openai:gpt-5-mini": { input_text_tokens: 52.75, cached_input_text_tokens: 5.28, output_text_tokens: 422 },
-  "openai:gpt-5-nano": { input_text_tokens: 10.55, cached_input_text_tokens: 1.06, output_text_tokens: 84.4 },
-  "openai:gpt-4.1": { input_text_tokens: 422, cached_input_text_tokens: 105.5, output_text_tokens: 1688 },
-  "openai:gpt-4.1-mini": { input_text_tokens: 84.4, cached_input_text_tokens: 21.1, output_text_tokens: 337.6 },
-  "openai:gpt-4.1-nano": { input_text_tokens: 21.1, cached_input_text_tokens: 5.28, output_text_tokens: 84.4 },
-  "openai:gpt-4o": {
-    input_text_tokens: 527.5, cached_input_text_tokens: 263.75, input_image_tokens: 527.5,
-    cached_input_image_tokens: 263.75, output_text_tokens: 2110
-  },
-  "openai:o3": { input_text_tokens: 422, cached_input_text_tokens: 105.5, output_text_tokens: 1688 },
-  "openai:o4-mini": { input_text_tokens: 232.1, cached_input_text_tokens: 58.03, output_text_tokens: 928.4 },
-  "openai:o1": { input_text_tokens: 3165, cached_input_text_tokens: 1582.5, output_text_tokens: 12660 },
-  "openai:gpt-image-1": { input_text_tokens: 2110, input_image_tokens: 2110, output_image_tokens: 8440 },
-  "openai:gpt-image-1.5": { input_text_tokens: 1688, input_image_tokens: 1688, output_image_tokens: 6752 },
-  "openai:gpt-image-2": {
-    input_text_tokens: 1055, cached_input_text_tokens: 263.75, input_image_tokens: 1688,
-    cached_input_image_tokens: 422, output_image_tokens: 6330
-  },
-  "vertexai:gemini-2.5-flash": {
-    input_text_tokens: 63.3, input_image_tokens: 63.3, input_video_tokens: 63.3,
-    input_audio_tokens: 211, output_text_tokens: 527.5, output_audio_tokens: 3165
-  },
-  "vertexai:gemini-2.5-flash-image": {
-    input_text_tokens: 63.3, input_image_tokens: 63.3, input_video_tokens: 63.3,
-    input_audio_tokens: 211, output_text_tokens: 527.5, output_image_tokens: 6330
-  },
-  "vertexai:gemini-2.5-flash-image-preview": {
-    input_text_tokens: 63.3, input_image_tokens: 63.3, input_video_tokens: 63.3,
-    input_audio_tokens: 211, output_text_tokens: 527.5, output_image_tokens: 6330
-  },
-  "vertexai:gemini-2.5-pro": {
-    input_text_tokens: 263.75, input_image_tokens: 263.75, input_video_tokens: 263.75,
-    input_audio_tokens: 263.75, output_text_tokens: 2110
-  },
-  "vertexai:gemini-2.5-pro-preview-05-06": {
-    input_text_tokens: 263.75, input_image_tokens: 263.75, input_video_tokens: 263.75,
-    input_audio_tokens: 263.75, output_text_tokens: 2110, output_image_tokens: 7385, output_video_tokens: 8440
-  },
-  "vertexai:gemini-3.1-flash-image-preview": {
-    input_text_tokens: 105.5, input_image_tokens: 105.5, input_video_tokens: 105.5,
-    input_audio_tokens: 211, output_text_tokens: 633, thoughts_tokens: 633, output_image_tokens: 12660
-  },
-  "vertexai:gemini-3.1-pro-preview": {
-    input_text_tokens: 422, input_image_tokens: 422, input_video_tokens: 422,
-    input_audio_tokens: 422, output_text_tokens: 2532, thoughts_tokens: 2532, output_image_tokens: 25320
-  },
-  "vertexai:gemini-3.1-flash-lite-preview": {
-    input_text_tokens: 52.75, input_image_tokens: 52.75, input_video_tokens: 52.75,
-    input_audio_tokens: 105.5, output_text_tokens: 316.5, thoughts_tokens: 316.5
-  },
-  "vertexai:gemini-3-pro-image-preview": {
-    input_text_tokens: 422, input_image_tokens: 422, input_video_tokens: 422,
-    input_audio_tokens: 422, output_text_tokens: 2532, thoughts_tokens: 2532, output_image_tokens: 25320
-  },
-  "vertexai:gemini-3-pro-preview": {
-    input_text_tokens: 422, input_image_tokens: 422, input_video_tokens: 422,
-    input_audio_tokens: 422, output_text_tokens: 2532, thoughts_tokens: 2532
-  }
-};
+import {
+  BYTEPLUS_VIDEO_TOKEN_RATES,
+  CLOUD_WORKFLOW_CREDIT_RATES,
+  DOCUMENTED_PRICING_FALLBACKS,
+  FIXED_RUN_CREDITS,
+  HITPAW_PHOTO_ENHANCE_RUN_CREDITS,
+  HITPAW_VIDEO_ENHANCE_RATES,
+  MINIMAX_HAILUO_02_RUN_CREDITS,
+  MODEL_TOKEN_RATES,
+  SORA_VIDEO_CREDITS_PER_SECOND,
+  VEO_RUN_CREDITS,
+  WAN_IMAGE_RUN_CREDITS,
+  WAN_VIDEO_CREDITS_PER_SECOND,
+  XAI_CREDITS
+} from "./credits-monitor-pricing-data.js";
 
 function num(value, fallback = 0) {
   const normalized =
@@ -143,6 +32,10 @@ function bool(value) {
   return false;
 }
 
+function text(value) {
+  return String(value ?? "").toLowerCase();
+}
+
 function baseVersionedModel(model) {
   return model.replace(/-\d{6}$/, "");
 }
@@ -153,24 +46,31 @@ function normalizedResolution(params) {
     params.size ??
     params.quality ??
     (params.width && params.height ? `${params.width}x${params.height}` : "");
-  const value = String(raw).toLowerCase().replace(/\s+/g, "");
+  const value = text(raw).replace(/\s+/g, "");
+  if (value.includes("2160") || value.includes("4k")) return "2160p";
+  if (value.includes("4320") || value.includes("8k")) return "4320p";
+  if (value.includes("1440") || value.includes("2k")) return "1440p";
   if (value.includes("1080")) return "1080p";
   if (value.includes("768")) return "768p";
   if (value.includes("720") || value.includes("1280x720") || value.includes("720x1280")) return "720p";
+  if (value.includes("540")) return "540p";
   if (value.includes("480")) return "480p";
+  if (value.includes("360")) return "360p";
   return value;
 }
 
 export function estimateCredits(event) {
   return estimateCloudWorkflowCredits(event) ??
     estimateXaiCredits(event) ??
-    estimateFixedCredits(event) ??
     estimateKlingCredits(event) ??
     estimateMinimaxCredits(event) ??
     estimateOpenAiVideoCredits(event) ??
     estimateVeoCredits(event) ??
     estimateWanCredits(event) ??
-    estimateTokenCredits(event);
+    estimateHitpawCredits(event) ??
+    estimateTokenCredits(event) ??
+    estimateFixedCredits(event) ??
+    estimateDocumentedFallbackCredits(event);
 }
 
 function eventDate(event) {
@@ -248,70 +148,75 @@ function durationSeconds(params) {
   return 0;
 }
 
+function fpsBucket(params) {
+  const fps = firstNumber(params, ["fps", "frame_rate", "frameRate", "output_fps", "outputFps"]);
+  if (!fps || fps < 30) return 0;
+  if (fps < 60) return 1;
+  if (fps < 120) return 2;
+  return 3;
+}
+
 function estimateCloudWorkflowCredits(event) {
   if (event?.event_type !== "cloud_workflow_executed" && event?.eventType !== "cloud_workflow_executed") return null;
   const rate = cloudWorkflowRateFor(eventDate(event));
   if (!rate) return null;
   const seconds = cloudWorkflowDurationSeconds(event?.params || {}) || rate.defaultBillableSeconds || 0;
-  if (!seconds) return null;
-  return seconds * rate.creditsPerSecond;
+  return seconds ? seconds * rate.creditsPerSecond : null;
 }
 
 function byteplusVideoRate(params, model) {
   const baseModel = baseVersionedModel(model);
-  if (baseModel.startsWith("seedance-1-0-lite")) return 379.8;
-  if (baseModel.startsWith("seedance-1-0-pro-fast")) return 211;
-  if (baseModel.startsWith("seedance-1-0-pro")) return 527.5;
-  if (baseModel.startsWith("seedance-1-5-pro")) return bool(params.generate_audio ?? params.generateAudio) ? 506.4 : 253.2;
-  if (model.startsWith("dreamina-seedance-2-0")) {
-    const resolutionMultiplier = normalizedResolution(params) === "1080p" ? 2.5 : 1;
-    const isFast = model.startsWith("dreamina-seedance-2-0-fast");
-    const perK = params.video_type === "video-to-video"
-      ? (isFast ? 0.696 : 0.907)
-      : (isFast ? 1.182 : 1.477);
-    return perK * resolutionMultiplier * 1000;
-  }
-  return null;
+  const resolution = normalizedResolution(params) || "720p";
+  const videoType = text(params.video_type ?? params.videoType);
+  const generateAudio = bool(params.generate_audio ?? params.generateAudio);
+  return BYTEPLUS_VIDEO_TOKEN_RATES.find((entry) => {
+    if (!baseModel.startsWith(entry.modelPrefix)) return false;
+    if (entry.generateAudio !== undefined && entry.generateAudio !== generateAudio) return false;
+    if (entry.resolution && entry.resolution !== resolution) return false;
+    if (entry.videoType && entry.videoType !== videoType) return false;
+    return true;
+  }) || null;
 }
 
 function rateTableForEvent(event) {
   const params = event?.params || {};
-  const provider = String(params.api_name ?? params.provider ?? params.service ?? "").toLowerCase();
-  const model = String(params.model ?? params.model_name ?? params.engine ?? "").toLowerCase();
+  const provider = text(params.api_name ?? params.provider ?? params.service);
+  const model = text(params.model ?? params.model_name ?? params.engine);
   if (provider === "byteplus") {
     const rate = byteplusVideoRate(params, model);
-    if (rate) return { total_tokens: rate };
+    if (rate) return { total_tokens: rate.creditsPerMillion, total_k_tokens: rate.creditsPerThousand, fallback: rate.fallbackCredits };
   }
   return MODEL_TOKEN_RATES[`${provider}:${model}`] || null;
 }
 
-function byteplusVideoTokenFallbackCredits(params, ratePerMillion) {
+function byteplusVideoTokenFallbackCredits(params, rate) {
+  const perMillion = rate.total_tokens;
+  const perThousand = rate.total_k_tokens;
   const fps = firstNumber(params, ["fps", "frame_rate", "frameRate"]) || 24;
   const width = firstNumber(params, ["width", "output_width", "outputWidth"]);
   const height = firstNumber(params, ["height", "output_height", "outputHeight"]);
   const seconds = durationSeconds(params);
-  if (!width || !height || !seconds) return null;
+  if (!width || !height || !seconds) return rate.fallback ?? null;
   const tokens = (seconds * width * height * fps) / 1024;
-  return (tokens / 1_000_000) * ratePerMillion;
+  if (perThousand !== undefined) return (tokens / 1000) * perThousand;
+  return (tokens / 1_000_000) * perMillion;
 }
 
 function estimateTokenCredits(event) {
   const rates = rateTableForEvent(event);
   if (!rates) return null;
   const params = event?.params || {};
-  if (rates.total_tokens !== undefined) {
+  if (rates.total_tokens !== undefined || rates.total_k_tokens !== undefined) {
     const tokens = firstNumber(params, ["total_tokens", "totalTokens", "output_tokens", "outputTokens", "tokens", "video_tokens"]);
-    return tokens > 0
-      ? (tokens / 1_000_000) * rates.total_tokens
-      : byteplusVideoTokenFallbackCredits(params, rates.total_tokens);
+    if (tokens > 0 && rates.total_k_tokens !== undefined) return (tokens / 1000) * rates.total_k_tokens;
+    if (tokens > 0) return (tokens / 1_000_000) * rates.total_tokens;
+    return byteplusVideoTokenFallbackCredits(params, rates);
   }
+
   const aliases = {
-    input_tokens: "input_text_tokens",
-    prompt_tokens: "input_text_tokens",
-    output_tokens: "output_text_tokens",
-    completion_tokens: "output_text_tokens",
-    cached_tokens: "cached_input_text_tokens",
-    cached_input_tokens: "cached_input_text_tokens",
+    input_tokens: "input_text_tokens", prompt_tokens: "input_text_tokens",
+    output_tokens: "output_text_tokens", completion_tokens: "output_text_tokens",
+    cached_tokens: "cached_input_text_tokens", cached_input_tokens: "cached_input_text_tokens",
     input_cached_tokens: "cached_input_text_tokens"
   };
   let credits = 0;
@@ -323,42 +228,32 @@ function estimateTokenCredits(event) {
     matched = true;
     credits += (num(value) / 1_000_000) * rate;
   });
-  return matched ? credits : null;
+  return matched ? credits : documentedTokenFallback(rates) ?? null;
 }
 
-function byteplusImageRunCredits(model) {
-  const baseModel = baseVersionedModel(model);
-  if (BYTEPLUS_IMAGE_RUN_CREDITS[baseModel]) return BYTEPLUS_IMAGE_RUN_CREDITS[baseModel];
-  if (baseModel.startsWith("seedream-4-0")) return BYTEPLUS_IMAGE_RUN_CREDITS["seedream-4-0"];
-  if (baseModel.startsWith("seedream-4-5")) return BYTEPLUS_IMAGE_RUN_CREDITS["seedream-4-5"];
-  if (baseModel.startsWith("seedream-5-0")) return BYTEPLUS_IMAGE_RUN_CREDITS["seedream-5-0"];
-  return null;
+function documentedTokenFallback(rates) {
+  return rates.output_image_tokens ??
+    rates.output_text_tokens ??
+    rates.output_video_tokens ??
+    rates.output_audio_tokens ??
+    rates.input_text_tokens ??
+    null;
 }
 
 function estimateFixedCredits(event) {
   const params = event?.params || {};
-  const provider = String(params.api_name ?? params.provider ?? params.service ?? "").toLowerCase();
-  const model = String(params.model ?? params.model_name ?? params.engine ?? "").toLowerCase();
-  const endpoint = String(params.endpoint ?? "").toLowerCase();
+  const provider = text(params.api_name ?? params.provider ?? params.service);
+  const model = text(params.model ?? params.model_name ?? params.engine);
+  const endpoint = text(params.endpoint);
   const generatedImages = Math.max(1, num(params.generated_images ?? params.n ?? params.count, 1));
-  const resolution = String(params.resolution ?? "").toLowerCase();
+  const resolution = text(params.resolution);
 
-  if (provider === "bfl" && BFL_RUN_CREDITS[model]) return BFL_RUN_CREDITS[model] * generatedImages;
-  if (provider === "byteplus") {
-    const imageCredits = byteplusImageRunCredits(model);
-    if (imageCredits) return imageCredits * generatedImages;
-    if (FIXED_RUN_CREDITS[`${provider}:${model}`]) return FIXED_RUN_CREDITS[`${provider}:${model}`] * generatedImages;
-  }
-  if (provider === "stability" && FIXED_RUN_CREDITS[`${provider}:${endpoint}`]) {
-    return FIXED_RUN_CREDITS[`${provider}:${endpoint}`];
-  }
+  const direct = FIXED_RUN_CREDITS[`${provider}:${model}`];
+  if (direct) return direct * generatedImages;
+  if (provider === "stability" && FIXED_RUN_CREDITS[`${provider}:${endpoint}`]) return FIXED_RUN_CREDITS[`${provider}:${endpoint}`];
   if (provider === "wavespeed") {
-    if (endpoint === "flashvsr" && FIXED_RUN_CREDITS[`${provider}:${endpoint}:${resolution}`]) {
-      return FIXED_RUN_CREDITS[`${provider}:${endpoint}:${resolution}`];
-    }
-    if (endpoint === "nano-banana-pro/edit") {
-      return FIXED_RUN_CREDITS[`${provider}:${endpoint}:${resolution || "1k"}`] || null;
-    }
+    if (endpoint === "flashvsr" && FIXED_RUN_CREDITS[`${provider}:${endpoint}:${resolution}`]) return FIXED_RUN_CREDITS[`${provider}:${endpoint}:${resolution}`];
+    if (endpoint === "nano-banana-pro/edit") return FIXED_RUN_CREDITS[`${provider}:${endpoint}:${resolution || "1k"}`] || null;
     return FIXED_RUN_CREDITS[`${provider}:${endpoint}`] || null;
   }
   return null;
@@ -366,45 +261,45 @@ function estimateFixedCredits(event) {
 
 function estimateMinimaxCredits(event) {
   const params = event?.params || {};
-  const provider = String(params.api_name ?? params.provider ?? params.service ?? "").toLowerCase();
+  const provider = text(params.api_name ?? params.provider ?? params.service);
   if (provider !== "minimax") return null;
-  const model = String(params.model ?? params.model_name ?? params.engine ?? "").toLowerCase();
-  if (MINIMAX_RUN_CREDITS[model]) return MINIMAX_RUN_CREDITS[model];
+  const model = text(params.model ?? params.model_name ?? params.engine);
+  const fixed = FIXED_RUN_CREDITS[`${provider}:${model}`];
+  if (fixed) return fixed;
   if (model !== "minimax-hailuo-02") return null;
 
   const seconds = durationSeconds(params);
   const resolution = normalizedResolution(params) || "768p";
-  return MINIMAX_HAILUO_02_RUN_CREDITS[`${seconds}:${resolution}`] || null;
+  return MINIMAX_HAILUO_02_RUN_CREDITS[`${seconds}:${resolution}`] ||
+    MINIMAX_HAILUO_02_RUN_CREDITS[`6:${resolution}`] ||
+    MINIMAX_HAILUO_02_RUN_CREDITS["6:768p"];
 }
 
 function estimateOpenAiVideoCredits(event) {
   const params = event?.params || {};
-  const provider = String(params.api_name ?? params.provider ?? params.service ?? "").toLowerCase();
+  const provider = text(params.api_name ?? params.provider ?? params.service);
   if (provider !== "openai") return null;
-  const model = String(params.model ?? params.model_name ?? params.engine ?? "").toLowerCase();
-  if (!model.startsWith("sora-2")) return null;
+  const model = text(params.model ?? params.model_name ?? params.engine);
+  const rates = SORA_VIDEO_CREDITS_PER_SECOND[model];
+  if (!rates) return null;
   const seconds = durationSeconds(params);
-  if (!seconds) return null;
-  const size = String(params.size ?? params.resolution ?? "").toLowerCase();
-  if (model === "sora-2") return seconds * 21.1;
-  if (model === "sora-2-pro") {
-    const highResolution = size.includes("1024x1792") || size.includes("1792x1024");
-    return seconds * (highResolution ? 105.5 : 63.3);
-  }
-  return null;
+  const size = text(params.size ?? params.resolution);
+  const highResolution = size.includes("1024x1792") || size.includes("1792x1024");
+  const rate = highResolution && rates.highResolution ? rates.highResolution : rates.default;
+  return seconds ? seconds * rate : rate;
 }
 
 function estimateVeoCredits(event) {
   const params = event?.params || {};
-  const provider = String(params.api_name ?? params.provider ?? params.service ?? "").toLowerCase();
+  const provider = text(params.api_name ?? params.provider ?? params.service);
   if (provider !== "veo" && provider !== "google" && provider !== "vertexai") return null;
-  const model = String(params.model ?? params.model_name ?? params.engine ?? "").toLowerCase();
+  const model = text(params.model ?? params.model_name ?? params.engine);
   const rates = VEO_RUN_CREDITS[model];
   if (!rates) return null;
   if (rates.default) return rates.default;
 
   const generateAudio = bool(params.generate_audio ?? params.generateAudio);
-  const endpoint = String(params.endpoint ?? params.product ?? params.node ?? "").toLowerCase();
+  const endpoint = text(params.endpoint ?? params.product ?? params.node);
   const useVideoRate = endpoint.includes("video") && rates.videoAudio !== undefined;
   if (useVideoRate) return generateAudio ? rates.videoAudio : rates.videoSilent;
   return generateAudio ? rates.audio : rates.silent;
@@ -412,35 +307,53 @@ function estimateVeoCredits(event) {
 
 function estimateWanCredits(event) {
   const params = event?.params || {};
-  const provider = String(params.api_name ?? params.provider ?? params.service ?? "").toLowerCase();
+  const provider = text(params.api_name ?? params.provider ?? params.service);
   if (provider !== "wan") return null;
-  const model = String(params.model ?? params.model_name ?? params.engine ?? "").toLowerCase();
-  if (model.startsWith("wan2.5-i2i") || model.startsWith("wan2.5-t2i") || model.startsWith("wan2.6-t2i")) {
-    return 6.33;
-  }
+  const model = text(params.model ?? params.model_name ?? params.engine);
+  if (WAN_IMAGE_RUN_CREDITS[model]) return WAN_IMAGE_RUN_CREDITS[model];
   if (!/^wan2\.(5|6|7)-/.test(model)) return null;
   const seconds = durationSeconds(params);
-  if (!seconds) return null;
   const resolution = normalizedResolution(params) || "720p";
   const rate = WAN_VIDEO_CREDITS_PER_SECOND[resolution] || WAN_VIDEO_CREDITS_PER_SECOND["720p"];
-  return seconds * rate;
+  return seconds ? seconds * rate : rate;
+}
+
+function estimateHitpawCredits(event) {
+  const params = event?.params || {};
+  const provider = text(params.api_name ?? params.provider ?? params.service);
+  if (provider !== "hitpaw") return null;
+
+  const resolution = normalizedResolution(params) || "1080p";
+  const product = text(params.product ?? params.product_name ?? params.endpoint ?? params.node ?? params.type);
+  const mode = text(params.type ?? params.mode ?? params.quality ?? params.model ?? params.model_name);
+  if (product.includes("photo") || product.includes("image")) {
+    return HITPAW_PHOTO_ENHANCE_RUN_CREDITS[resolution] || HITPAW_PHOTO_ENHANCE_RUN_CREDITS["1080p"];
+  }
+
+  const kind =
+    mode.includes("ultra") ? "ultra" :
+      mode.includes("gen") ? "gen" :
+        "standard";
+  const bucket = fpsBucket(params);
+  const rate = HITPAW_VIDEO_ENHANCE_RATES[kind]?.[resolution]?.[bucket] ||
+    HITPAW_VIDEO_ENHANCE_RATES[kind]?.["1080p"]?.[bucket];
+  return rate ? rate * (durationSeconds(params) || 1) : null;
 }
 
 function estimateKlingCredits(event) {
   const params = event?.params || {};
-  const provider = String(params.api_name ?? params.provider ?? params.service ?? "").toLowerCase();
+  const provider = text(params.api_name ?? params.provider ?? params.service);
   if (provider !== "kling") return null;
-  const model = String(params.model ?? params.model_name ?? "").toLowerCase();
-  const endpoint = String(params.endpoint ?? "").toLowerCase();
-  const mode = String(params.mode ?? "pro").toLowerCase();
+  const model = text(params.model ?? params.model_name);
+  const endpoint = text(params.endpoint);
+  const mode = text(params.mode) || "pro";
   const duration = num(params.duration, 0);
   const finalUnitDeduction = num(params.final_unit_deduction, 0);
 
   if (FIXED_RUN_CREDITS[`kling:${mode}:${model}`]) return FIXED_RUN_CREDITS[`kling:${mode}:${model}`];
 
   if (model === "kling-video-o1") {
-    const seconds = duration || inferKlingDuration(finalUnitDeduction);
-    if (!seconds) return null;
+    const seconds = duration || inferKlingDuration(finalUnitDeduction) || 1;
     const ratePerSecond = Boolean(params.generate_with_video)
       ? (mode === "pro" ? 35.45 : 26.59)
       : (mode === "pro" ? 23.63 : 17.72);
@@ -448,14 +361,12 @@ function estimateKlingCredits(event) {
   }
 
   if (model.startsWith("kling-v3")) {
-    const seconds = duration || inferKlingDuration(finalUnitDeduction);
-    if (!seconds) return null;
+    const seconds = duration || inferKlingDuration(finalUnitDeduction) || 1;
     return seconds * (mode === "pro" ? 23.63 : 17.72);
   }
 
   if (endpoint === "videos/image2video" || endpoint === "videos/text2video") {
-    const seconds = duration || inferLegacyKlingDuration(model);
-    if (!seconds) return null;
+    const seconds = duration || inferLegacyKlingDuration(model) || 1;
     return seconds * (mode === "pro" ? 23.63 : 17.72);
   }
 
@@ -464,19 +375,19 @@ function estimateKlingCredits(event) {
 
 function estimateXaiCredits(event) {
   const params = event?.params || {};
-  const provider = String(params.api_name ?? params.provider ?? params.service ?? "").toLowerCase();
+  const provider = text(params.api_name ?? params.provider ?? params.service);
   if (provider !== "xai") return null;
-  const endpoint = String(params.endpoint ?? "").toLowerCase();
-  const model = String(params.model ?? params.model_name ?? "").toLowerCase();
+  const endpoint = text(params.endpoint);
+  const model = text(params.model ?? params.model_name);
   const duration = num(params.duration, 0);
 
   if (endpoint === "v1/images/generations") return XAI_CREDITS.imageGenerationRun;
   if (endpoint === "v1/images/edits") return XAI_CREDITS.imageEditOutputRun + XAI_CREDITS.imageEditInputRun;
-  if (endpoint === "v1/videos/generations" && duration > 0) {
+  if (endpoint === "v1/videos/generations") {
     const inputImage = params.type === "image-to-video" ? XAI_CREDITS.videoGenerationInputImagePerSecond : 0;
-    return duration * (XAI_CREDITS.videoGenerationOutputPerSecond + inputImage);
+    return (duration || 1) * (XAI_CREDITS.videoGenerationOutputPerSecond + inputImage);
   }
-  if (endpoint === "v1/videos/edits" && duration > 0) return duration * XAI_CREDITS.videoEditPerSecond;
+  if (endpoint === "v1/videos/edits") return (duration || 1) * XAI_CREDITS.videoEditPerSecond;
   if (model === "grok-imagine-image-pro") return XAI_CREDITS.imageEditOutputRun + XAI_CREDITS.imageEditInputRun;
   if (model === "grok-imagine-video") {
     const rawCredits = num(params.credits, 0);
@@ -487,9 +398,50 @@ function estimateXaiCredits(event) {
   return rawCredits > 0 ? rawCredits / XAI_CREDITS.scaledRawDivisor : null;
 }
 
+function estimateDocumentedFallbackCredits(event) {
+  const params = event?.params || {};
+  const provider = text(params.api_name ?? params.provider ?? params.service);
+  const scored = DOCUMENTED_PRICING_FALLBACKS
+    .map((entry) => ({ entry, score: pricingFallbackScore(entry, provider, params) }))
+    .filter((candidate) => candidate.score > 0)
+    .sort((a, b) => b.score - a.score)[0]?.entry;
+  return scored ? priceUnitCredits(scored, params) : null;
+}
+
+function pricingFallbackScore(entry, provider, params) {
+  if (entry.provider !== provider) return 0;
+  let score = 1;
+  for (const key of [
+    "model", "endpoint", "type", "quality", "rendering_speed",
+    "generate_type", "interpolation_model", "texture_quality"
+  ]) {
+    if (entry[key] === undefined) continue;
+    const value = text(params[key] ?? params[camelKey(key)] ?? (key === "model" ? params.model_name ?? params.engine : ""));
+    if (value !== text(entry[key])) return 0;
+    score += 2;
+  }
+  if (entry.resolution && normalizedResolution(params) !== entry.resolution) return 0;
+  if (entry.resolution) score += 2;
+  if (entry.size && !text(params.size ?? params.resolution).includes(entry.size)) return 0;
+  if (entry.size) score += 2;
+  if (entry.duration && durationSeconds(params) && durationSeconds(params) !== entry.duration) return 0;
+  if (entry.duration) score += 1;
+  return score;
+}
+
+function camelKey(key) {
+  return key.replace(/_([a-z])/g, (_, char) => char.toUpperCase());
+}
+
+function priceUnitCredits(entry, params) {
+  if (entry.unit === "sec") return entry.credits * (durationSeconds(params) || 1);
+  if (entry.unit === "min") return entry.credits * (firstNumber(params, ["minutes", "duration_minutes", "durationMinutes"]) || 1);
+  if (entry.unit === "image") return entry.credits * Math.max(1, num(params.n ?? params.count ?? params.generated_images, 1));
+  return entry.credits;
+}
+
 function inferKlingDuration(finalUnitDeduction) {
-  if (!finalUnitDeduction) return 0;
-  return finalUnitDeduction / 1.2;
+  return finalUnitDeduction ? finalUnitDeduction / 1.2 : 0;
 }
 
 function inferLegacyKlingDuration(model) {

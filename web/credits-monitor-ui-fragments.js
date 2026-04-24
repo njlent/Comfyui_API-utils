@@ -101,6 +101,38 @@ function tableBadgeClass(event) {
   return "";
 }
 
+function detailValue(value) {
+  if (value && typeof value === "object") return JSON.stringify(value);
+  return String(value ?? "");
+}
+
+function eventDetailsText(event) {
+  const params = event.params || {};
+  const lines = [
+    `ID: ${event.id}`,
+    `Type: ${event.type}`,
+    `Provider: ${event.provider}`,
+    `Model: ${event.model}`,
+    `Estimated: ${event.estimated ? "yes" : "no"}`,
+    `Credits: ${fmtCredits(event.credits)}`,
+    `USD: ${fmtUsd(event.usd)}`,
+    `Time: ${fmtDateFull(event.createdAt)}`
+  ];
+  const paramLines = Object.keys(params)
+    .sort()
+    .map((key) => `${key}: ${detailValue(params[key])}`);
+  return [...lines, "", "Params:", ...(paramLines.length ? paramLines : ["none"])].join("\n");
+}
+
+function infoButtonMarkup(event) {
+  return `
+    <span class="cae-info-wrap">
+      <span class="cae-info-dot" tabindex="0" aria-label="Event details">i</span>
+      <span class="cae-info-popover" role="tooltip"><pre>${esc(eventDetailsText(event))}</pre></span>
+    </span>
+  `;
+}
+
 export function usageTableMarkup(context) {
   if (!context.pagedUsage.items.length) return `<div class="cae-empty">No usage activity in this filter scope.</div>`;
   const rows = context.pagedUsage.items
@@ -117,6 +149,7 @@ export function usageTableMarkup(context) {
             <strong>${fmtCredits(event.credits)}</strong>
             <span>${fmtUsd(event.usd)}</span>
           </div>
+          <div class="cae-activity-info">${infoButtonMarkup(event)}</div>
         </div>
       `
     )
@@ -134,6 +167,7 @@ export function usageTableMarkup(context) {
         <div>Details</div>
         <div>Time</div>
         <div>Credits</div>
+        <div></div>
       </div>
       ${rows}
       <div class="cae-pagination">
