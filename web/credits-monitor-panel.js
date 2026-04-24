@@ -8,7 +8,7 @@ import {
 } from "./credits-monitor-data.js";
 import { renderDonutChart, renderStackedBarChart } from "./credits-monitor-charts.js";
 import {
-  burnConfigFromSettings, burnMarkup, formatBurnDuration, formatBurnTopUpDate,
+  burnConfigFromSettings, burnMarkup, formatBurnTopUpDate, formatBurnRunwayTarget,
   refreshBurnPreview, summarizeBurn
 } from "./credits-monitor-burn.js";
 import {
@@ -63,7 +63,7 @@ function headerMarkup(context) {
   const burnConfig = burnConfigFromSettings(currentSettings());
   const burnSummary = summarizeBurn(burnConfig);
   const burnEta = formatBurnTopUpDate(burnSummary.hoursToReserve);
-  const burnRunway = formatBurnDuration(burnSummary.hoursToReserve);
+  const burnRunway = formatBurnRunwayTarget(burnSummary.hoursToReserve, burnConfig.reserveCredits);
   return `
     <section class="cae-shell-card cae-header-card">
       <div class="cae-header-main">
@@ -77,7 +77,7 @@ function headerMarkup(context) {
           <button class="cae-button cae-button-pill" data-cae-action="refresh" ${state.loading ? "disabled" : ""}>Refresh data</button>
         </div>
       </div>
-      <div class="cae-balance-hero">
+      <div class="cae-balance-hero cae-balance-hero-with-burn">
         <div class="cae-balance-hero-main">
           <div class="cae-balance-label">Your credit balance</div>
           <div class="cae-balance-value">
@@ -90,15 +90,15 @@ function headerMarkup(context) {
           <div class="cae-snapshot-card cae-burn-summary-card" data-cae-header-burn>
             <span class="cae-snapshot-label">Top-up estimate</span>
             <strong title="${esc(burnEta)}">${esc(burnEta)}</strong>
-            <small>${esc(`${fmtCredits(burnSummary.rateCredits)} credits/${burnConfig.rateUnit} - ${burnRunway} until ${fmtCredits(burnConfig.reserveCredits)} reserve`)}</small>
+            <small>${esc(`${fmtCredits(burnSummary.rateCredits)} credits/${burnConfig.rateUnit} - ${burnRunway}`)}</small>
           </div>
-          <div class="cae-snapshot-card">
+          <div class="cae-snapshot-card cae-snapshot-card-window">
             <span class="cae-snapshot-label">Window</span>
             <strong>${esc(windowLabel(state.selectedWindow))}</strong>
           </div>
-          <div class="cae-snapshot-card">
+          <div class="cae-snapshot-card cae-snapshot-card-top-model">
             <span class="cae-snapshot-label">Top model</span>
-            <strong title="${esc(topModel)}">${esc(topModel)}</strong>
+            <strong class="cae-snapshot-wrap" title="${esc(topModel)}">${esc(topModel)}</strong>
           </div>
           <div class="cae-snapshot-card cae-snapshot-card-runs">
             <span class="cae-snapshot-label">Runs</span>

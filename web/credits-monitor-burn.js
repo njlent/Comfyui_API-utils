@@ -2,7 +2,6 @@ import {
   aggregateModels,
   fmtCount,
   fmtCredits,
-  fmtDateFull,
   fmtUsd,
   state
 } from "./credits-monitor-data.js";
@@ -103,7 +102,18 @@ export function formatBurnDuration(hours) {
 export function formatBurnTopUpDate(hours) {
   if (!Number.isFinite(hours)) return "No top-up ETA";
   if (hours <= 0) return "Top up now";
-  return fmtDateFull(new Date(Date.now() + hours * HOUR_MS));
+  return new Date(Date.now() + hours * HOUR_MS).toLocaleString(undefined, {
+    year: "numeric",
+    month: "numeric",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit"
+  });
+}
+
+export function formatBurnRunwayTarget(hours, reserveCredits) {
+  const runway = formatBurnDuration(hours);
+  return reserveCredits > 0 ? `${runway} until ${fmtCredits(reserveCredits)}` : runway;
 }
 
 export function summarizeBurn(config) {
@@ -178,12 +188,13 @@ function burnBody(config) {
   const unitLabel = `/${config.rateUnit}`;
   const topUpDate = formatBurnTopUpDate(summary.hoursToReserve);
   const runway = formatBurnDuration(summary.hoursToReserve);
+  const runwayTarget = formatBurnRunwayTarget(summary.hoursToReserve, config.reserveCredits);
   return `
     <div class="cae-burn-grid">
       <div class="cae-burn-hero">
         <span>Top-up estimate</span>
         <strong>${esc(topUpDate)}</strong>
-        <small>${esc(runway)} until ${fmtCredits(config.reserveCredits)} reserve</small>
+        <small>${esc(runwayTarget)}</small>
       </div>
       <div class="cae-burn-metrics">
         ${metric(`Burn rate ${unitLabel}`, fmtCredits(summary.rateCredits), fmtUsd(summary.rateUsd))}
