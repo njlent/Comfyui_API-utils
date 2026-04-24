@@ -1,46 +1,18 @@
 import {
-  aggregateModels,
-  aggregateProviders,
-  buildStackedTimeline,
-  creditAddedEventsInWindow,
-  filterUsageEvents,
-  fmtCount,
-  fmtCredits,
-  fmtDateFull,
-  fmtUsd,
-  getModelOptions,
-  getProviderOptions,
-  hasCloudAuth,
-  openUserSettings,
-  paginateEvents,
-  state,
-  summarize,
-  summarizeCreditsAdded,
-  summariesByWindow,
-  updateLedgerPage,
-  updateCustomWindowDays,
-  updateModelFilter,
-  updateProviderFilter,
-  updateSection,
-  updateStackedGroup,
-  updateWindow,
-  usageEventsInWindow,
-  windowLabel
+  aggregateModels, aggregateProviders, buildStackedTimeline, creditAddedEventsInWindow,
+  filterUsageEvents, fmtCount, fmtCredits, fmtDateFull, fmtUsd, getModelOptions,
+  getProviderOptions, hasCloudAuth, openUserSettings, paginateEvents, state, summarize,
+  summarizeCreditsAdded, summariesByWindow, updateLedgerPage, updateCustomWindowDays,
+  updateModelFilter, updateProviderFilter, updateSection, updateStackedGroup, updateWindow,
+  usageEventsInWindow, windowLabel
 } from "./credits-monitor-data.js";
+import { renderDonutChart, renderStackedBarChart } from "./credits-monitor-charts.js";
 import {
-  renderDonutChart,
-  renderLineChart,
-  renderStackedBarChart
-} from "./credits-monitor-charts.js";
+  exportMarkup, handleExportAction, refreshExportPreview, syncExportSelectionCount, updateExportPage
+} from "./credits-monitor-export.js";
 import {
-  billingLedgerMarkup,
-  creditsIconMarkup,
-  esc,
-  modelRowsMarkup,
-  selectMarkup,
-  snapshotCardsMarkup,
-  topUpTableMarkup,
-  usageTableMarkup
+  billingLedgerMarkup, creditsIconMarkup, esc, modelRowsMarkup, selectMarkup,
+  snapshotCardsMarkup, topUpTableMarkup, usageTableMarkup
 } from "./credits-monitor-ui-fragments.js";
 
 function buildContext() {
@@ -141,7 +113,8 @@ function filtersMarkup(context) {
   const sectionButtons = [
     ["overview", "Overview"],
     ["activity", "Activity"],
-    ["topups", "Credits Added"]
+    ["topups", "Credits Added"],
+    ["export", "Export"]
   ]
     .map(
       ([key, label]) => `
@@ -336,6 +309,7 @@ function topupsMarkup(context) {
 function sectionMarkup(context) {
   if (state.selectedSection === "activity") return activityMarkup(context);
   if (state.selectedSection === "topups") return topupsMarkup(context);
+  if (state.selectedSection === "export") return exportMarkup(context);
   return overviewMarkup(context);
 }
 
@@ -448,6 +422,8 @@ export function attachPanelEvents(container, onRefresh) {
     }
     const pageButton = event.target.closest("[data-cae-page]");
     if (pageButton) updateLedgerPage(pageButton.dataset.caePage);
+    const exportButton = event.target.closest("[data-cae-export-action]");
+    if (exportButton) handleExportAction(container, exportButton.dataset.caeExportAction);
   });
 
   container.addEventListener("change", (event) => {
@@ -457,12 +433,16 @@ export function attachPanelEvents(container, onRefresh) {
       return;
     }
     if (event.target.dataset.caeSelect === "model") updateModelFilter(event.target.value);
+    if (event.target.matches("[data-cae-export-dataset]")) refreshExportPreview(container);
   });
 
   container.addEventListener("change", (event) => {
     if (!(event.target instanceof HTMLInputElement)) return;
     if (event.target.matches("[data-cae-custom-days]")) updateCustomWindowDays(event.target.value);
     if (event.target.matches("[data-cae-page-jump]")) updateLedgerPage(event.target.value);
+    if (event.target.matches("[data-cae-export-days], [data-cae-export-scope]")) refreshExportPreview(container);
+    if (event.target.matches("[data-cae-export-row]")) syncExportSelectionCount(container, event.target);
+    if (event.target.matches("[data-cae-export-page]")) updateExportPage(container);
   });
 
   container.addEventListener("mousemove", (event) => {
