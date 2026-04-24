@@ -77,7 +77,7 @@ function scopedEvents(config) {
     });
 }
 
-function formatDuration(hours) {
+export function formatBurnDuration(hours) {
   if (!Number.isFinite(hours)) return "No active burn";
   if (hours <= 0) return "Now";
   if (hours < 1) return `${Math.max(1, Math.round(hours * 60))} min`;
@@ -87,13 +87,13 @@ function formatDuration(hours) {
   return remHours ? `${days}d ${remHours}h` : `${days}d`;
 }
 
-function formatTopUpDate(hours) {
+export function formatBurnTopUpDate(hours) {
   if (!Number.isFinite(hours)) return "No top-up ETA";
   if (hours <= 0) return "Top up now";
   return fmtDateFull(new Date(Date.now() + hours * HOUR_MS));
 }
 
-function burnSummary(config) {
+export function summarizeBurn(config) {
   const events = scopedEvents(config);
   const totalCredits = events.reduce((sum, event) => sum + event.credits, 0);
   const totalUsd = events.reduce((sum, event) => sum + event.usd, 0);
@@ -146,7 +146,7 @@ function modelBreakdown(events, totalCredits) {
             <div class="cae-burn-source">
               <div>
                 <strong title="${esc(item.model)}">${esc(item.model)}</strong>
-                <span>${esc(item.provider)} · ${fmtCount(item.count)} runs</span>
+                <span>${esc(item.provider)} - ${fmtCount(item.count)} runs</span>
               </div>
               <div>
                 <strong>${fmtCredits(item.credits)}</strong>
@@ -161,10 +161,10 @@ function modelBreakdown(events, totalCredits) {
 }
 
 function burnBody(config) {
-  const summary = burnSummary(config);
+  const summary = summarizeBurn(config);
   const unitLabel = `/${config.rateUnit}`;
-  const topUpDate = formatTopUpDate(summary.hoursToReserve);
-  const runway = formatDuration(summary.hoursToReserve);
+  const topUpDate = formatBurnTopUpDate(summary.hoursToReserve);
+  const runway = formatBurnDuration(summary.hoursToReserve);
   return `
     <div class="cae-burn-grid">
       <div class="cae-burn-hero">
@@ -175,7 +175,7 @@ function burnBody(config) {
       <div class="cae-burn-metrics">
         ${metric(`Burn rate ${unitLabel}`, fmtCredits(summary.rateCredits), fmtUsd(summary.rateUsd))}
         ${metric("Balance runway", runway, `${fmtCredits(summary.balanceCredits)} credits available`)}
-        ${metric("Range usage", fmtCredits(summary.totalCredits), `${fmtCount(summary.events.length)} runs · ${rangeLabel(config)}`)}
+        ${metric("Range usage", fmtCredits(summary.totalCredits), `${fmtCount(summary.events.length)} runs - ${rangeLabel(config)}`)}
         ${metric("Average run", fmtCredits(summary.avgRun), summary.events.length ? "credits/run" : "no runs")}
       </div>
       <div class="cae-burn-note">

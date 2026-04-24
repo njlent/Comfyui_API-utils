@@ -15,6 +15,11 @@ import {
   topbarStatus
 } from "./credits-monitor-data.js";
 import {
+  formatBurnDuration,
+  formatBurnTopUpDate,
+  summarizeBurn
+} from "./credits-monitor-burn.js";
+import {
   attachPanelEvents,
   renderPanel
 } from "./credits-monitor-panel.js";
@@ -23,8 +28,8 @@ import {
   esc
 } from "./credits-monitor-ui-fragments.js";
 import {
+  currentSettings,
   showCreditsWidget,
-  showCreditsWidgetRefreshButton,
   subscribeSettings
 } from "./credits-monitor-settings.js";
 
@@ -38,11 +43,36 @@ function ensureStyles() {
   document.head.appendChild(link);
 }
 
-function topbarMarkup() {
+function widgetBurnConfig(settings) {
+  return {
+    rangeValue: settings.creditsWidgetBurnRateRange,
+    rangeUnit: settings.creditsWidgetBurnRateRangeUnit,
+    rateUnit: settings.creditsWidgetBurnRateUnit,
+    reserveCredits: settings.creditsWidgetReserveCredits,
+    currentScope: false
+  };
+}
+
+function topbarBurnLines(settings) {
+  if (!hasCloudAuth() || (!settings.showCreditsWidgetBurnRate && !settings.showCreditsWidgetTopUpEta)) return "";
+  const summary = summarizeBurn(widgetBurnConfig(settings));
+  const lines = [];
+  if (settings.showCreditsWidgetBurnRate) {
+    lines.push(`Burn rate ${fmtCredits(summary.rateCredits)} credits/${settings.creditsWidgetBurnRateUnit}`);
+  }
+  if (settings.showCreditsWidgetTopUpEta) {
+    const eta = formatBurnTopUpDate(summary.hoursToReserve);
+    const runway = formatBurnDuration(summary.hoursToReserve);
+    lines.push(Number.isFinite(summary.hoursToReserve) ? `Top-up ${eta} (${runway})` : "Top-up ETA unavailable");
+  }
+  return lines.map((line) => `<div class="cae-topbar-secondary">${esc(line)}</div>`).join("");
+}
+
+function topbarMarkup(settings = currentSettings()) {
   const balance = state.balance;
   const authed = hasCloudAuth();
   const status = topbarStatus();
-  const showRefresh = showCreditsWidgetRefreshButton();
+  const showRefresh = settings.showCreditsWidgetRefreshButton;
   const primary = authed
     ? balance
       ? `${fmtCredits(balance.credits)} Credits`
@@ -61,6 +91,7 @@ function topbarMarkup() {
           <span>${esc(primary)}</span>
         </div>
         <div class="cae-topbar-secondary">${esc(secondary)}</div>
+        ${topbarBurnLines(settings)}
       </div>
       <div class="cae-topbar-actions">
         ${showRefresh ? `
@@ -89,7 +120,7 @@ function scheduleTopbarRetry(attempt = 0) {
   }, 400);
 }
 
-function ensureTopbar(attempt = 0) {
+function ensureTopbar(attempt = 0, settings = currentSettings()) {
   ensureStyles();
   const menu = app.menu?.element;
   if (!menu) {
@@ -114,7 +145,7 @@ function ensureTopbar(attempt = 0) {
     state.topbarRoot = shell;
   }
   if (state.topbarRoot.parentElement !== menu) menu.appendChild(state.topbarRoot);
-  state.topbarRoot.innerHTML = topbarMarkup();
+  state.topbarRoot.innerHTML = topbarMarkup(settings);
 }
 
 function startAutoRefresh() {
@@ -168,11 +199,11 @@ app.registerExtension({
     if (!state.setupDone) {
       state.setupDone = true;
       subscribe(() => {
-        ensureTopbar();
+        ensureTopbar(0, currentSettings());
         renderPanel();
       });
-      subscribeSettings(() => {
-        ensureTopbar();
+      subscribeSettings((settings) => {
+        ensureTopbar(0, settings);
       });
       startAutoRefresh();
     }
