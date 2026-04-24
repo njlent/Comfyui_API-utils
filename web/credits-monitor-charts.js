@@ -46,6 +46,11 @@ function formatStackedAxisValue(value) {
   return `${Math.round(value / 1000)}k`;
 }
 
+function formatValueWithUsd(value, valueFormatter, usdFormatter) {
+  const creditsText = `${valueFormatter(value)} credits`;
+  return usdFormatter ? `${creditsText} / ${usdFormatter(value)}` : creditsText;
+}
+
 function legendMarkup(items, paletteMap, valueFormatter) {
   if (!items.length) return "";
   return `
@@ -69,6 +74,7 @@ export function renderStackedBarChart({
   bins,
   series,
   valueFormatter,
+  usdFormatter,
   tooltipFormatter,
   emptyMessage = "No chart data.",
   splitXAxisLabels = false
@@ -107,7 +113,8 @@ export function renderStackedBarChart({
           const heightValue = (segment.value / axisScale.top) * chartHeight;
           const segmentHeight = Math.max(segment.value ? heightValue : 0, 3);
           cursor -= segmentHeight;
-          const body = `${bin.label} | ${valueFormatter(segment.value)}`;
+          const valueText = formatValueWithUsd(segment.value, valueFormatter, usdFormatter);
+          const body = `${bin.label} | ${valueText}`;
           return `
             <g
               class="cae-chart-node"
@@ -170,6 +177,7 @@ export function renderStackedBarChart({
 export function renderLineChart({
   points,
   valueFormatter,
+  usdFormatter,
   emptyMessage = "No line data.",
   label = "Usage",
   compactXAxis = false
@@ -214,20 +222,23 @@ export function renderLineChart({
 
   const pointsMarkup = mapped
     .map(
-      (point) => `
+      (point) => {
+        const valueText = formatValueWithUsd(point.value, valueFormatter, usdFormatter);
+        return `
         <g
           class="cae-chart-node"
           tabindex="0"
           role="img"
-          aria-label="${esc(`${label} | ${point.label}: ${valueFormatter(point.value)}`)}"
-          ${tooltipAttrs(label, `${point.label} | ${valueFormatter(point.value)}`)}
+          aria-label="${esc(`${label} | ${point.label}: ${valueText}`)}"
+          ${tooltipAttrs(label, `${point.label} | ${valueText}`)}
         >
           <line x1="${point.x}" y1="${point.y}" x2="${point.x}" y2="${padding.top + chartHeight}" class="cae-line-guide"></line>
           <circle cx="${point.x}" cy="${point.y}" r="4.5" class="cae-line-point"></circle>
           <circle cx="${point.x}" cy="${point.y}" r="12" fill="transparent" class="cae-chart-hitbox"></circle>
-          <title>${esc(`${label} | ${point.label}: ${valueFormatter(point.value)}`)}</title>
+          <title>${esc(`${label} | ${point.label}: ${valueText}`)}</title>
         </g>
-      `
+      `;
+      }
     )
     .join("");
 
@@ -262,6 +273,7 @@ export function renderLineChart({
 export function renderDonutChart({
   items,
   valueFormatter,
+  usdFormatter,
   centerLabel,
   centerValue,
   centerSubvalue,
@@ -284,13 +296,14 @@ export function renderDonutChart({
     .map((item) => {
       const ratio = item.value / total;
       const dash = ratio * circumference;
-      const body = `${valueFormatter(item.value)} | ${(ratio * 100).toFixed(1)}% share`;
+      const valueText = formatValueWithUsd(item.value, valueFormatter, usdFormatter);
+      const body = `${valueText} | ${(ratio * 100).toFixed(1)}% share`;
       const node = `
         <g
           class="cae-chart-node"
           tabindex="0"
           role="img"
-          aria-label="${esc(`${item.label}: ${valueFormatter(item.value)}`)}"
+          aria-label="${esc(`${item.label}: ${valueText}`)}"
           ${tooltipAttrs(item.label, body)}
         >
           <circle
@@ -319,7 +332,7 @@ export function renderDonutChart({
             transform="rotate(-90 90 90)"
             class="cae-chart-hitbox"
           ></circle>
-          <title>${esc(`${item.label}: ${valueFormatter(item.value)}`)}</title>
+          <title>${esc(`${item.label}: ${valueText}`)}</title>
         </g>
       `;
       offset += dash;

@@ -222,7 +222,8 @@ function overviewMarkup(context) {
           bins: stacked.bins,
           series: stacked.series,
           valueFormatter: (value) => fmtCredits(value),
-          tooltipFormatter: (bin, segment) => `${segment.label} - ${bin.label}: ${fmtCredits(segment.value)} credits`,
+          usdFormatter: (value) => fmtUsd(value / 211),
+          tooltipFormatter: (bin, segment) => `${segment.label} - ${bin.label}: ${fmtCredits(segment.value)} credits / ${fmtUsd(segment.value / 211)}`,
           emptyMessage: `No ${stackedGroup} usage in this scope.`,
           splitXAxisLabels: ["1h", "7d"].includes(state.selectedWindow)
         })}
@@ -237,6 +238,7 @@ function overviewMarkup(context) {
         ${renderDonutChart({
           items: shareItems,
           valueFormatter: (value) => fmtCredits(value),
+          usdFormatter: (value) => fmtUsd(value / 211),
           centerValue: fmtCredits(context.usageSummary.totalCredits),
           centerSubvalue: fmtUsd(context.usageSummary.totalUsd),
           compactCenter: true,
