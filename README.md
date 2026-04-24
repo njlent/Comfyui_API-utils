@@ -1,36 +1,39 @@
-# ComfyUI_API-utils
+<div align="center">
 
-Frontend-only ComfyUI custom node pack for Comfy credits visibility and API node pricing hints.
+ <h1> <img src="docs/icon.webp" width="100px">
+ <br/>
+ ComfyUI API-Utils</h1>
+
+ <img src="https://img.shields.io/badge/ComfyUI Customnode-1528c7"/> 
+ 
+
+</div>
+<br/>
+
+Enhanced Comfy-Credits analytics, display, CSV export, aswell as USD conversion/display.
+
+> [!IMPORTANT]
+> Credit and USD numbers are estimates, not official billing records.
+
+Some Comfy API billing events do not expose raw credit values in a directly readable form. For those events this extension estimates credits from current or known price tables and token/count/duration metadata. These numbers are not completely exact and can deviate by around 10% for some nodes.
 
 ## Features
 
-- Top-bar credits widget with current balance and USD value.
-- Optional top-bar refresh button.
-- Manual refresh command for credits data.
+- Customizable Top-bar credits widget with current balance, USD value and burn-rate.
 - Auto-refresh while ComfyUI is visible.
-- Sign-in shortcut to `Settings > User` when no Comfy auth token is available.
+- USD cost estimation on API nodes.
 - Bottom-panel `Credits Analytics` tab.
-- `Extensions > Credits Analytics` menu commands.
-- Preset analytics windows: last hour, day, week, month, and all time.
-- Custom analytics window from 1 to 3650 days.
-- Provider and model filters.
-- Overview dashboard with balance, top model, run count, and spend.
-- Stacked usage chart grouped by provider or model.
-- Provider/model share donut chart.
-- Top model leaderboard with credits, USD, share, and run count.
-- Window snapshot cards for quick range comparison.
-- Activity table with paginated API usage and cloud workflow events.
-- Recent billing ledger with top-ups and usage charges.
-- Credits-added view with total added, USD value, top-up count, latest top-up, and paginated history.
-- API node USD estimate badges next to Comfy credit badges.
+- `Overview` tab with usage charts, balance, top model, run count, and spend.
+- `Activity` tab with all billable calls with proper navigation.
+- `Credits Added` tab with Top-up events.
+- `Burn Rate` tab with customisable burn-rate and top-up estimation.
+- `Export` tab with configurable CSV export of all data.
 - Settings toggles for:
   - credits widget
   - estimated USD badges on API nodes
   - widget refresh button
-- Personal Comfy credits support via `/customers/*` billing endpoints.
-- Workspace billing support via `/billing/*` endpoints.
-- Firebase/auth-store discovery for current Comfy cloud sessions.
-- No extra Python dependencies.
+  - burn rate widget
+- No extra Python dependencies needed.
 
 ## Pricing Estimates
 
@@ -51,7 +54,7 @@ For exact billing, use Comfy's official credits and billing pages.
 
 ## Install
 
-1. Keep this folder in `ComfyUI/custom_nodes/ComfyUI_api-enhance`.
+1. git clone or copy folder into `ComfyUI/custom_nodes`.
 2. Restart ComfyUI.
 3. Sign in to your Comfy account in `Settings > User`.
 4. Open the analytics panel from the top-bar widget or `Extensions > Credits Analytics`.
