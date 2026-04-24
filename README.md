@@ -14,7 +14,7 @@ Enhanced Comfy-Credits analytics, display, CSV export, aswell as USD conversion/
 
 > [!IMPORTANT]
 > Credit and USD numbers are estimates, not official billing records.
->Some Comfy API billing events do not expose raw credit values in a directly readable form. For those events this extension estimates credits from current or known price tables and token/count/duration metadata. These numbers are not completely exact and can deviate by around 10% for some nodes.
+>Some Comfy API billing events do not expose raw credit values in a directly readable form. For those events this extension estimates credits from current or known price tables and token/count/duration metadata. These numbers are not completely exact and can deviate by up to   10% for some nodes.
 
 ## Features
 
@@ -39,7 +39,7 @@ Enhanced Comfy-Credits analytics, display, CSV export, aswell as USD conversion/
 - Uses the current Comfy UI conversion ratio: `211 credits = $1`.
 - Uses raw billing events when Comfy exposes usable credit or USD values.
 - When raw credit values cannot be read, credits are estimated from available price, token count, duration, endpoint, model, and provider metadata.
-- Estimation support currently covers known OpenAI, Gemini/Vertex AI, xAI, BytePlus, Stability, WaveSpeed, Kling, and Comfy Cloud workflow patterns present in billing events.
+- Estimation is calculated on offical comfyui pricing from docs https://docs.comfy.org/tutorials/partner-nodes/pricing
 
 ## Accuracy Disclaimer
 

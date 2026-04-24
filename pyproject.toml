@@ -1,0 +1,16 @@
+[project]
+name = "wavelet-colorfix"
+description = "Enhanced Comfy-Credits analytics, display, CSV export, aswell as USD conversion/display."
+version = "0.0.1"
+license = {file = "LICENSE"} 
+
+[project.urls]
+Repository = "https://github.com/njlent/ComfyUI_API-utils"
+# Used by Comfy Registry https://registry.comfy.org
+# Documentation = "https://github.com/njlent/ComfyUI_API-utils/wiki"
+"Bug Tracker" = "https://github.com/njlent/ComfyUI_API-utils/issues"
+
+[tool.comfy]
+PublisherId = "njlent"
+DisplayName = "ComfyUI_API-utils"
+Icon = "https://avatars.githubusercontent.com/u/10400593"
