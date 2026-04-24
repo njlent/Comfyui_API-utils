@@ -185,6 +185,62 @@
   color: var(--cae-gold);
 }
 
+.cae-run-estimate {
+  position: fixed;
+  z-index: 1400;
+  pointer-events: none;
+  padding: 12px 13px;
+  border: 1px solid color-mix(in srgb, var(--cae-gold) 58%, transparent);
+  border-radius: 10px;
+  background:
+    linear-gradient(135deg, rgba(244, 180, 55, 0.18), transparent 42%),
+    color-mix(in srgb, var(--cae-panel) 94%, black);
+  color: var(--cae-text);
+  box-shadow: 0 14px 32px rgba(0, 0, 0, 0.32);
+  opacity: 0;
+  transform: translateY(5px) scale(0.98);
+  transition:
+    opacity 120ms ease,
+    transform 120ms ease;
+}
+
+.cae-run-estimate.is-visible {
+  pointer-events: auto;
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+.cae-run-estimate-label {
+  color: var(--cae-muted);
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.cae-run-estimate-value {
+  margin-top: 5px;
+  font-size: 20px;
+  font-weight: 800;
+  line-height: 1.05;
+}
+
+.cae-run-estimate-usd {
+  margin-top: 3px;
+  color: var(--cae-gold);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.cae-run-estimate-meta {
+  margin-top: 7px;
+  color: var(--cae-muted);
+  font-size: 11px;
+  line-height: 1.25;
+}
+
+.cae-run-estimate.is-empty .cae-run-estimate-usd {
+  color: var(--cae-muted);
+}
+
 .cae-panel {
   height: 100%;
   overflow: auto;

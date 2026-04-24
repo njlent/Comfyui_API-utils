@@ -19,6 +19,7 @@ Enhanced Comfy-Credits analytics, display, CSV export, aswell as USD conversion/
 ## Features
 
 - Customizable Top-bar credits widget with current balance, USD value and burn-rate.
+- Hover estimate on the Run button with current workflow credits and USD cost, multiplied by the queued run count.
 - Auto-refresh while ComfyUI is visible.
 - USD cost estimation on API nodes.
 - Bottom-panel `Credits Analytics` tab.
@@ -30,6 +31,7 @@ Enhanced Comfy-Credits analytics, display, CSV export, aswell as USD conversion/
 - Settings toggles for:
   - credits widget
   - estimated USD badges on API nodes
+  - run button cost estimate
   - widget refresh button
   - burn rate widget
 - No extra Python dependencies needed.

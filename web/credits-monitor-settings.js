@@ -6,6 +6,7 @@ export const SETTING_IDS = {
   showCreditsWidgetRefreshButton: "Comfy.ApiUtils.ShowCreditsWidgetRefreshButton",
   showCreditsWidgetDollarValue: "Comfy.ApiUtils.ShowCreditsWidgetDollarValue",
   showCreditsWidgetBurnRate: "Comfy.ApiUtils.ShowCreditsWidgetBurnRate",
+  showRunCostEstimate: "Comfy.ApiUtils.ShowRunCostEstimate",
   creditsWidgetPrimarySubline: "Comfy.ApiUtils.CreditsWidgetPrimarySubline",
   creditsWidgetHoverSubline: "Comfy.ApiUtils.CreditsWidgetHoverSubline",
   creditsWidgetBurnRateRange: "Comfy.ApiUtils.CreditsWidgetBurnRateRange",
@@ -20,6 +21,7 @@ const defaults = {
   showCreditsWidgetRefreshButton: false,
   showCreditsWidgetDollarValue: true,
   showCreditsWidgetBurnRate: false,
+  showRunCostEstimate: false,
   creditsWidgetPrimarySubline: "dollar",
   creditsWidgetHoverSubline: "burn-rate",
   creditsWidgetBurnRateRange: 7,
@@ -42,7 +44,8 @@ function normalizeValue(valueKey, value) {
     valueKey === "showApiNodeUsdBadge" ||
     valueKey === "showCreditsWidgetRefreshButton" ||
     valueKey === "showCreditsWidgetDollarValue" ||
-    valueKey === "showCreditsWidgetBurnRate"
+    valueKey === "showCreditsWidgetBurnRate" ||
+    valueKey === "showRunCostEstimate"
   ) {
     return Boolean(value);
   }
@@ -153,6 +156,12 @@ export function registerSettings() {
     "showApiNodeUsdBadge",
     ["ComfyUI_API-utils", "API Nodes", "show-estimated-usd-price"]
   );
+  registerBooleanSetting(
+    SETTING_IDS.showRunCostEstimate,
+    "Show run button cost estimate",
+    "showRunCostEstimate",
+    ["ComfyUI_API-utils", "Run Button", "show-cost-estimate"]
+  );
 }
 
 export function subscribeSettings(listener) {
@@ -188,6 +197,10 @@ export function showApiNodeUsdBadge() {
 
 export function showCreditsWidgetRefreshButton() {
   return values.showCreditsWidgetRefreshButton;
+}
+
+export function showRunCostEstimate() {
+  return values.showRunCostEstimate;
 }
 
 registerSettings();
