@@ -311,7 +311,7 @@ function topupsMarkup(context) {
         <div class="cae-card-head">
           <div>
             <h3>Credits added history</h3>
-            <p>Top-up events in the selected window, with added value and converted credits.</p>
+            <p>Top-up events in the selected window, with added value and converted credits. Credits from subscription renewals are not included.</p>
           </div>
           <div class="cae-inline-note">${fmtCount(context.pagedTopups.total)} top-up events</div>
         </div>
