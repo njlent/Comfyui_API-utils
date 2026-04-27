@@ -346,18 +346,20 @@ function estimateKlingCredits(event) {
   if (provider !== "kling") return null;
   const model = text(params.model ?? params.model_name);
   const endpoint = text(params.endpoint);
-  const mode = text(params.mode) || "pro";
-  const duration = num(params.duration, 0);
-  const finalUnitDeduction = num(params.final_unit_deduction, 0);
+  const mode = klingMode(params);
+  const duration = durationSeconds(params);
+  const finalUnitDeduction = firstNumber(params, ["final_unit_deduction", "finalUnitDeduction"]);
 
   if (FIXED_RUN_CREDITS[`kling:${mode}:${model}`]) return FIXED_RUN_CREDITS[`kling:${mode}:${model}`];
 
+  if (endpoint === "videos/omni-video") {
+    const seconds = duration || finalUnitDeduction || 1;
+    return seconds * klingOmniCreditsPerSecond(params, mode);
+  }
+
   if (model === "kling-video-o1") {
     const seconds = duration || inferKlingDuration(finalUnitDeduction) || 1;
-    const ratePerSecond = Boolean(params.generate_with_video)
-      ? (mode === "pro" ? 35.45 : 26.59)
-      : (mode === "pro" ? 23.63 : 17.72);
-    return seconds * ratePerSecond;
+    return seconds * klingOmniCreditsPerSecond(params, mode);
   }
 
   if (model.startsWith("kling-v3")) {
@@ -371,6 +373,50 @@ function estimateKlingCredits(event) {
   }
 
   return null;
+}
+
+function klingOmniCreditsPerSecond(params, mode) {
+  return klingOmniHasVideoInput(params)
+    ? (mode === "pro" ? 35.45 : 26.59)
+    : (mode === "pro" ? 23.63 : 17.72);
+}
+
+function klingMode(params) {
+  const mode = text(params.mode);
+  if (mode) return mode;
+  return normalizedResolution(params) === "720p" ? "std" : "pro";
+}
+
+function klingOmniHasVideoInput(params) {
+  if (params.generate_with_video !== undefined || params.generateWithVideo !== undefined) {
+    return bool(params.generate_with_video ?? params.generateWithVideo);
+  }
+  if (hasValue(params.video_list ?? params.videoList)) return true;
+  if (hasValue(params.video) || hasValue(params.reference_video ?? params.referenceVideo)) return true;
+  if (hasValue(params.input_video ?? params.inputVideo) || hasValue(params.source_video ?? params.sourceVideo)) return true;
+  if (hasValue(params.base_video ?? params.baseVideo)) return true;
+  if (params.keep_original_sound !== undefined || params.keepOriginalSound !== undefined) return true;
+
+  const descriptor = text([
+    params.node,
+    params.node_id,
+    params.nodeId,
+    params.class_type,
+    params.classType,
+    params.product,
+    params.product_name,
+    params.type
+  ].filter(Boolean).join(" "));
+  return descriptor.includes("editvideo") ||
+    descriptor.includes("edit video") ||
+    descriptor.includes("video-to-video") ||
+    descriptor.includes("videotovideo");
+}
+
+function hasValue(value) {
+  if (value === undefined || value === null || value === "") return false;
+  if (Array.isArray(value)) return value.length > 0;
+  return true;
 }
 
 function estimateXaiCredits(event) {

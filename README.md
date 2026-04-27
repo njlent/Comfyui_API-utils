@@ -45,6 +45,7 @@ Enhanced Comfy-Credits analytics, display, CSV export, aswell as USD conversion/
 - Uses the current Comfy UI conversion ratio: `211 credits = $1`.
 - Uses raw billing events when Comfy exposes usable credit or USD values.
 - When raw credit values cannot be read, credits are estimated from available price, token count, duration, endpoint, model, and provider metadata.
+- Kling Omni video estimates use `final_unit_deduction` as seconds when no explicit duration is available and use the video-input rate for edit/video-to-video events.
 - Estimation is calculated on offical comfyui pricing from docs https://docs.comfy.org/tutorials/partner-nodes/pricing
 
 ## Accuracy Disclaimer
