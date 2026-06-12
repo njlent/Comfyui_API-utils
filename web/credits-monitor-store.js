@@ -173,12 +173,12 @@ async function getFirebaseAuthStore() {
   }
 
   const source = typeof api.getAuthStore === "function" ? String(api.getAuthStore) : "";
-  const moduleName = source.match(/firebaseAuthStore-[^"`')]+\.js/)?.[0];
+  const moduleName = source.match(/(?:firebaseAuthStore|authStore)-[^"`')]+\.js/)?.[0];
   if (!moduleName) return null;
 
   const moduleUrl = new URL(moduleName, findFrontendAssetBase()).toString();
   const module = await import(moduleUrl);
-  const store = module.useFirebaseAuthStore?.() || null;
+  const store = module.useFirebaseAuthStore?.() || module.useAuthStore?.() || null;
   if (store) await waitForAuthStore(store);
   return store;
 }
