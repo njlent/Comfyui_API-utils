@@ -159,6 +159,18 @@ async function waitForAuthStore(store) {
   }
 }
 
+function findPiniaAuthStore() {
+  const vueApp = app.vueApp || document.getElementById("vue-app")?.__vue_app__;
+  const stores = vueApp?.config?.globalProperties?.$pinia?._s;
+  if (!(stores instanceof Map)) return null;
+  return (
+    stores.get("firebaseAuth") ||
+    stores.get("auth") ||
+    [...stores.values()].find((store) => typeof store?.getFirebaseAuthHeader === "function") ||
+    null
+  );
+}
+
 async function getFirebaseAuthStore() {
   if (typeof api.getAuthStore === "function") {
     try {
@@ -170,6 +182,14 @@ async function getFirebaseAuthStore() {
     } catch {
       // Non-cloud builds return no store here; fall through to module discovery.
     }
+  }
+
+  // Frontend >= 1.50 ships api.getAuthStore as an empty stub; the auth store
+  // is only reachable through the app's Pinia registry.
+  const piniaStore = findPiniaAuthStore();
+  if (piniaStore) {
+    await waitForAuthStore(piniaStore);
+    return piniaStore;
   }
 
   const source = typeof api.getAuthStore === "function" ? String(api.getAuthStore) : "";
